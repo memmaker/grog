@@ -1,0 +1,5 @@
+grog.exe
+*.exe
+bin/
+obj/
+web/dist/

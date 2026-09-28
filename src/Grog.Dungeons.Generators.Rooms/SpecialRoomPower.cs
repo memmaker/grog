@@ -1,0 +1,36 @@
+namespace Grog.Dungeons.Generators.Rooms;
+
+public enum SpecialRoomPower
+{
+	None,
+	NoHealing,
+	InvertedMovement,
+	DoubleDamage,
+	TripleDamage,
+	DoubleDamageByMonsters,
+	TripleDamageByMonsters,
+	NeverHitByPlayer,
+	VeryRarelyHitByPlayer,
+	NeverHit,
+	VeryRarelyHit,
+	DoubleHunger,
+	TripleHunger,
+	QuadrulpleHunger,
+	MightyUndead,
+	HalvedStrength,
+	HalvedDexterity,
+	RandomSummonings,
+	ItemRot,
+	GoldRot,
+	Humid,
+	Rotting,
+	Rusting,
+	SatiationByMana,
+	Slippery,
+	Fumbling,
+	ManaCharged,
+	PowerfulManaCharged,
+	BugInfested,
+	Magnetic,
+	SlashieRoom
+}
