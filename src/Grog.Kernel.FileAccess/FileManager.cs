@@ -86,7 +86,7 @@ public static class FileManager
 			Stream stream = new GZipStream(File.OpenWrite(fullPath), CompressionMode.Compress);
 			try
 			{
-				new BinaryFormatter().Serialize(stream, data);
+				new BinaryFormatter { SurrogateSelector = new DelegateSurrogateSelector() }.Serialize(stream, data);
 			}
 			finally
 			{
