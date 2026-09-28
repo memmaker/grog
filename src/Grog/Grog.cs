@@ -401,6 +401,7 @@ internal static class Grog
 							ConsoleKeyInfo consoleKeyInfo;
 							try
 							{
+								AutoExploreAction.Note(currentDungeonLevel, player3);
 								consoleKeyInfo = Curses.Instance.ReadKey();
 								currentDungeonLevel.ClearMessages();
 								currentDungeonLevel.ResetAutoMore();
@@ -411,7 +412,14 @@ internal static class Grog
 							{
 								return false;
 							}
-							if ((consoleKeyInfo.Key == ConsoleKey.LeftArrow || consoleKeyInfo.Key == ConsoleKey.A) && (consoleKeyInfo.Modifiers & ConsoleModifiers.Shift) != 0)
+							if (consoleKeyInfo.KeyChar == 'g' || consoleKeyInfo.KeyChar == '<' || consoleKeyInfo.KeyChar == '>')
+							{
+								if (AutoExploreAction.Start(player3, currentDungeonLevel, consoleKeyInfo.KeyChar == 'g' ? null : (consoleKeyInfo.KeyChar == '<' ? Tile.StairUp : Tile.StairDown)))
+								{
+									Game.Instance.IsFirstTurnWithAutomaticAction = true;
+								}
+							}
+							else if ((consoleKeyInfo.Key == ConsoleKey.LeftArrow || consoleKeyInfo.Key == ConsoleKey.A) && (consoleKeyInfo.Modifiers & ConsoleModifiers.Shift) != 0)
 							{
 								currentDungeonLevel.MovePlayerWest();
 								player3.AutomaticAction = new AutomaticMovementAction(player3, currentDungeonLevel, Direction.West);

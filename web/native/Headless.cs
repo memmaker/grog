@@ -25,8 +25,13 @@ namespace GrogHeadless{
 		static readonly string[] specials = {"ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Numpad1","Numpad2","Numpad3","Numpad4","Numpad5","Numpad6","Numpad7","Numpad8","Numpad9","Home","End","PageUp","PageDown","Backspace"};
 		public bool KeyAvailable(){ return false; }
 		public ConsoleKeyInfo ReadKey(){
+			if(Environment.GetEnvironmentVariable("NOMON") != null){ //scripted tests: no monsters on the level
+				var lv = global::Grog.Kernel.Game.Instance?.DungeonMaster?.CurrentDungeonLevel;
+				if(lv != null && lv.Grog != null) foreach(var t in new System.Collections.Generic.List<global::Grog.Dressings.Thing>(lv.Things)) if(t is global::Grog.Dressings.Beings.Being && t != lv.Grog && t.X >= 0) lv.RemoveThing(t.X, t.Y);
+			}
 			string scr = Dump();
 			if(scr.Contains("Internal Error")) internalError = true;
+			if(script.Count > 0 && scr.Contains("---more---") && Environment.GetEnvironmentVariable("KEYS") != null) return K(' '); //scripted tests: pass --more-- prompts
 			if(script.Count > 0) return script.Dequeue();
 			if(scr.Contains("play again")) HeadlessMain.Finish("game over");
 			if(left <= 0){
@@ -59,7 +64,7 @@ namespace GrogHeadless{
 			Term.Backend = h;
 			Term.DataRoot = Directory.GetCurrentDirectory();
 			H = h; Seed = seed; Loaded = File.Exists("grog42_v1.sg");
-			h.Script(Loaded ? " " : "\r\r\r\r");
+			h.Script(Loaded ? " " : "\r\r\r\r"); h.Script(Environment.GetEnvironmentVariable("KEYS") ?? ""); //KEYS: scripted test keys
 			try{ global::Grog.Grog.Main(new string[0]); }
 			catch(Exception e){ Console.WriteLine("UNHANDLED: " + e); Environment.Exit(2); }
 			Finish("main returned");

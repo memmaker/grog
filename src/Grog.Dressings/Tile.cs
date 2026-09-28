@@ -221,6 +221,15 @@ public class Tile : Thing
 		return _itemProcessor.Process(dungeonLevel, grog, item);
 	}
 
+	public static bool IsTileDescription(string text) // RVIP: auto-explore ignores these messages
+	{
+		foreach (Tile t in _tileByIndex.Values)
+		{
+			if (t.Description == text) return true;
+		}
+		return false;
+	}
+
 	public static Tile GetTile(int index)
 	{
 		return _tileByIndex[index];

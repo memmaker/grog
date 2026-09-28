@@ -44,6 +44,35 @@ e3a6b5ad49a1d3e5ce333cbe8d58b16a257f679141dd98df47bfa97266fb63d2, in-game versio
   by the same surrogate selector (wasm); item list cursor past column 79 (upstream bug).
   `ReadObject` failures now logged to gcrash (logOnly).
 
-**Next:** stage 2 (explore + stairs). Open: trimmed build breaks BinaryFormatter
+**Stage 1 open:** trimmed build breaks BinaryFormatter
 (`Converter` type initializer) → shipped untrimmed; the page is one Map window with the whole
 screen (panes/sub-windows are stage 5).
+
+### Stage 2 — Explore + stairs (done)
+
+- **Keys:** `g` = auto-explore, `<` / `>` = walk to the nearest known stairs of that kind and
+  take them (on them: take at once). Help text (`src/Grog/Constants.cs` HelpText) lists both.
+- **Code:** `src/Grog.Kernel/AutoExploreAction.cs` (`IAutomaticAction`, the game's own
+  run/rest mechanism: one step per main-loop turn, a key press cancels it in the loop).
+  **Hook:** `src/Grog/Grog.cs` command chain (first `if`: `g` `<` `>` → `AutoExploreAction.Start`)
+  and `AutoExploreAction.Note(level, grog)` right before the command `ReadKey`.
+- **Stops:** visible monster (`GetAllBeingsVisibleTo`), any new message
+  (`DungeonLevel.MessageSerial`, bumped in `Message()` except tile descriptions like
+  "A door." / "A stair is leading upwards.", `Tile.IsTileDescription`), any key. Avoids
+  `KnownTrapFeature` cells. Grog has no closed/locked doors and no harmful terrain.
+  `MoveThing` stops the game's runs at room changes and next to doors → the action re-arms
+  itself after its own step.
+- **"Known grid" test:** `MemoryOf(x,y) != ' '` or `Grog.CanSee(x,y)` or inside a lit room
+  whose corner wall is remembered (Grog keeps only walls in memory, floors are drawn live) or
+  next to a cell Grog has stood on (tunnel sides are never drawn; per-level
+  `ConditionalWeakTable`, not saved). Frontier = walkable known cell with an unknown 4-neighbour;
+  BFS 4-way (Grog moves 4-way only).
+- **Tests:** headless `web/native` now takes `KEYS="..."` (scripted keys, passes ---more---)
+  and `NOMON=1` (removes monsters each key): `NOMON=1 DUMP=1 KEYS="$(printf 'g%.0s' $(seq 40))>>>>>" dotnet web/native/bin/Release/net10.0/GrogNative.dll 1 0`
+  → D:2 on 4/4 seeds (explore finishes the level, `>` walks and descends). Browser pane
+  (web build): `g` stops on a monster / "feels endangered" message, resumes on `g`, walks
+  corridors and doors; `<` walked back through corridor and room, stopped when a bat came into
+  view. Note: the pane's `type` action sends no keydown; dispatch `KeyboardEvent` for `<` `>`.
+
+**Next:** stage 3 (Enter menu + inventory). Open: the "stood next to" part of the known grid
+is lost on save/load (explore may revisit tunnel ends once); stage 1 open items unchanged.

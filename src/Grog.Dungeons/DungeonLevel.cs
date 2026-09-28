@@ -1008,6 +1008,8 @@ public class DungeonLevel
 		return Message(null, (message.StartsWith(" ") || message.StartsWith("'")) ? (Grog.Name + message) : message, more, renderMap, moreMessage, moreKey);
 	}
 
+	public static int MessageSerial;
+
 	public bool Message(Thing observed, string message, bool more = false, bool renderMap = true, string moreMessage = "---more---", char moreKey = ' ')
 	{
 		if (message == null)
@@ -1017,6 +1019,10 @@ public class DungeonLevel
 		if (observed != null && !Grog.CanSee(this, observed))
 		{
 			return false;
+		}
+		if (!Tile.IsTileDescription(message))
+		{
+			MessageSerial++; // RVIP: auto-explore stops on new messages (not tile descriptions)
 		}
 		if (observed != null && observed is Being being && (message.StartsWith(" ") || message.StartsWith("'")))
 		{
