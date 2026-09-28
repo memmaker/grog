@@ -71,7 +71,7 @@ internal static class Grog
 
 	public static void Main(string[] args)
 	{
-		System.Console.CancelKeyPress += GrogCancelKeyHandler;
+		if (Term.Backend == null) System.Console.CancelKeyPress += GrogCancelKeyHandler;
 		string text = string.Empty;
 		try
 		{

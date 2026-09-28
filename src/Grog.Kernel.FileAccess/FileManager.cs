@@ -39,15 +39,16 @@ public static class FileManager
 				Stream stream = new GZipStream(File.OpenRead(fullPath), CompressionMode.Decompress);
 				try
 				{
-					return (OT)new BinaryFormatter().Deserialize(stream);
+					return (OT)new BinaryFormatter { SurrogateSelector = new DelegateSurrogateSelector() }.Deserialize(stream);
 				}
 				finally
 				{
 					stream.Close();
 				}
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
+				Game.RaiseError("Error while trying to read '" + fullPath + "': " + ex, logOnly: true);
 				return getDefault();
 			}
 		}
