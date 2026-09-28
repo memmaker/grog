@@ -3,24 +3,19 @@
     <AssemblyName>grog</AssemblyName>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net48</TargetFramework>
-    <Prefer32Bit>True</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>14.0</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-  </PropertyGroup>
-  <PropertyGroup>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <NoWarn>$(NoWarn);CS0162;CS0168;CS0219;CS0414;CS0649;CS0169;CA1416;SYSLIB0011</NoWarn>
     <RootNamespace />
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Grog.version.txt" />
     <EmbeddedResource Include="Grog.version.txt" LogicalName="Grog.version.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Core">
-      <HintPath>../../../.dotnet/shared/Microsoft.NETCore.App/10.0.12/System.Core.dll</HintPath>
-    </Reference>
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="10.0.0" />
   </ItemGroup>
 </Project>
