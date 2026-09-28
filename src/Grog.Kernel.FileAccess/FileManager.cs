@@ -1,4 +1,5 @@
 using System;
+using Grog.Kernel.GCurses;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -55,7 +56,7 @@ public static class FileManager
 
 	public static string GetFullPath(string fileName, Environment.SpecialFolder folder = Environment.SpecialFolder.Personal)
 	{
-		string text = Path.Combine(Environment.GetFolderPath(folder), "Grog");
+		string text = Term.DataRoot ?? Path.Combine(Environment.GetFolderPath(folder), "Grog");
 		if (!Directory.Exists(text))
 		{
 			Exception ex = null;
@@ -112,9 +113,9 @@ public static class FileManager
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine("Error while trying to write '" + fullPath + "': " + ex.Message + "\n" + ex.StackTrace);
-			Console.WriteLine("\nPress ENTER to continue...");
-			Console.ReadLine();
+			Term.WriteLine("Error while trying to write '" + fullPath + "': " + ex.Message + "\n" + ex.StackTrace);
+			Term.WriteLine("\nPress ENTER to continue...");
+			Term.ReadLine();
 		}
 	}
 }

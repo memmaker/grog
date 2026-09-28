@@ -2207,7 +2207,7 @@ public class DungeonLevel
 			{
 				break;
 			}
-			Thread.Sleep(150);
+			Term.Sleep(150);
 			if (sx != ex || sy != ey)
 			{
 				sx += xm;
@@ -2250,7 +2250,7 @@ public class DungeonLevel
 				}
 			}
 			Curses.Instance.Refresh();
-			Thread.Sleep(100);
+			Term.Sleep(100);
 		}
 		Render();
 		Curses.Instance.Refresh();

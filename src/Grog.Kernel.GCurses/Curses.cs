@@ -45,20 +45,20 @@ public class Curses
 
 	public static int MinWindowHeight => 24;
 
-	public bool IsKeyAvailable => Console.KeyAvailable;
+	public bool IsKeyAvailable => Term.KeyAvailable;
 
 	private Curses()
 	{
-		Console.CursorVisible = false;
-		Console.TreatControlCAsInput = true;
-		WindowWidth = Console.WindowWidth;
-		WindowHeight = Console.WindowHeight;
+		Term.CursorVisible = false;
+		Term.TreatControlCAsInput = true;
+		WindowWidth = Term.WindowWidth;
+		WindowHeight = Term.WindowHeight;
 		_currentTerminal = new CursesTerminal(WindowWidth, WindowHeight);
 		_nextTerminal = new CursesTerminal(WindowWidth, WindowHeight);
 		_foregroundColor = ConsoleColor.Black;
 		_backgroundColor = ConsoleColor.White;
-		Console.ForegroundColor = _foregroundColor;
-		Console.BackgroundColor = _backgroundColor;
+		Term.ForegroundColor = _foregroundColor;
+		Term.BackgroundColor = _backgroundColor;
 		for (int i = 0; i < WindowWidth; i++)
 		{
 			for (int j = 0; j < WindowHeight; j++)
@@ -67,7 +67,7 @@ public class Curses
 				_nextTerminal.SetChar(i, j, ' ', _foregroundColor, _backgroundColor);
 			}
 		}
-		Console.Clear();
+		Term.Clear();
 	}
 
 	public void InitializeColorSystem(ConsoleColor foreground, ConsoleColor background)
@@ -75,8 +75,8 @@ public class Curses
 		_nextTerminal.ReplaceColorSystem(_foregroundColor, _backgroundColor, foreground, background);
 		_foregroundColor = foreground;
 		_backgroundColor = background;
-		Console.ForegroundColor = foreground;
-		Console.BackgroundColor = background;
+		Term.ForegroundColor = foreground;
+		Term.BackgroundColor = background;
 	}
 
 	public void SetCursorPosition(int x, int y)
@@ -153,13 +153,13 @@ public class Curses
 	public string ReadLine(int maxLength)
 	{
 		Refresh();
-		Console.CursorVisible = true;
-		if (maxLength > WindowWidth - CursorX)
+		Term.CursorVisible = true;
+		if (Term.Backend == null && maxLength > WindowWidth - CursorX)
 		{
 			int cursorX = CursorX;
 			int cursorY = CursorY;
 			string text = Console.ReadLine();
-			Console.CursorVisible = false;
+			Term.CursorVisible = false;
 			SetCursorPosition(cursorX, cursorY);
 			WriteLine(text);
 			Refresh();
@@ -184,7 +184,7 @@ public class Curses
 				}
 				else
 				{
-					Console.Beep();
+					Term.Beep();
 				}
 			}
 			else if (consoleKeyInfo.Key == ConsoleKey.Enter)
@@ -202,12 +202,12 @@ public class Curses
 				}
 				else
 				{
-					Console.Beep();
+					Term.Beep();
 				}
 			}
 		}
 		while (!flag);
-		Console.CursorVisible = false;
+		Term.CursorVisible = false;
 		Write('\n');
 		Refresh();
 		return stringBuilder.ToString().Trim();
@@ -215,6 +215,12 @@ public class Curses
 
 	public void Refresh()
 	{
+		if (Term.Backend != null)
+		{
+			Term.Present(_nextTerminal, _cx, _cy);
+			_fullRefresh = false;
+			return;
+		}
 		if (_lastWindowWidth != Console.WindowWidth || _lastWindowHeight != Console.WindowHeight)
 		{
 			try
@@ -225,8 +231,8 @@ public class Curses
 			catch (Exception)
 			{
 			}
-			Console.ForegroundColor = _foregroundColor;
-			Console.BackgroundColor = _backgroundColor;
+			Term.ForegroundColor = _foregroundColor;
+			Term.BackgroundColor = _backgroundColor;
 			Console.Clear();
 			_lastWindowWidth = Console.WindowWidth;
 			_lastWindowHeight = Console.WindowHeight;
@@ -323,12 +329,12 @@ public class Curses
 		Refresh();
 		if (showCursor)
 		{
-			Console.CursorVisible = true;
+			Term.CursorVisible = true;
 		}
-		ConsoleKeyInfo result = Console.ReadKey(intercept: true);
+		ConsoleKeyInfo result = Term.ReadKey();
 		if (showCursor)
 		{
-			Console.CursorVisible = false;
+			Term.CursorVisible = false;
 		}
 		if (showReadKey)
 		{

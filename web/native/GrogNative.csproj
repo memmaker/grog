@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- RVIP ASan substitute: the game's sources + a headless backend fed seeded random keys -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>14.0</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+    <NoWarn>$(NoWarn);CS0162;CS0168;CS0219;CS0414;CS0649;CS0169;CA1416;SYSLIB0011</NoWarn>
+    <StartupObject>GrogHeadless.HeadlessMain</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/**/*.cs" Exclude="../../src/obj/**;../../src/bin/**" />
+    <Compile Include="Headless.cs" />
+    <EmbeddedResource Include="../../src/Grog.version.txt" LogicalName="Grog.version.txt" />
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="10.0.0" />
+  </ItemGroup>
+</Project>

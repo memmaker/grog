@@ -1,4 +1,5 @@
 using System;
+using Grog.Kernel.GCurses;
 using System.IO;
 using System.Text;
 using Grog.Kernel.FileAccess;
@@ -25,10 +26,10 @@ public static class Tracer
 			}
 			catch (Exception ex)
 			{
-				Console.ForegroundColor = ConsoleColor.Black;
-				Console.BackgroundColor = ConsoleColor.White;
-				Console.WriteLine("\n\nFailed to create the trace file:\n\n" + ex.StackTrace);
-				Console.ReadLine();
+				Term.ForegroundColor = ConsoleColor.Black;
+				Term.BackgroundColor = ConsoleColor.White;
+				Term.WriteLine("\n\nFailed to create the trace file:\n\n" + ex.StackTrace);
+				Term.ReadLine();
 			}
 			AppDomain.CurrentDomain.ProcessExit += CloseTraceOnExit;
 		}

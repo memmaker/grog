@@ -71,7 +71,7 @@ internal static class Grog
 
 	public static void Main(string[] args)
 	{
-		Console.CancelKeyPress += GrogCancelKeyHandler;
+		System.Console.CancelKeyPress += GrogCancelKeyHandler;
 		string text = string.Empty;
 		try
 		{
@@ -99,22 +99,22 @@ internal static class Grog
 		}
 		try
 		{
-			Console.SetWindowSize(80, 26);
+			Term.SetWindowSize(80, 26);
 			InitializationStatus += "S";
 		}
 		catch (Exception)
 		{
 			InitializationStatus += "s";
 		}
-		if (Console.WindowWidth < Curses.MinWindowWidth || Console.WindowHeight < Curses.MinWindowHeight)
+		if (Term.WindowWidth < Curses.MinWindowWidth || Term.WindowHeight < Curses.MinWindowHeight)
 		{
-			Console.WriteLine("Grog requires a minimum " + Curses.MinWindowWidth + "x" + Curses.MinWindowHeight + " console window size to run (current: " + Console.WindowWidth + "x" + Console.WindowHeight + ").\n\n");
+			Term.WriteLine("Grog requires a minimum " + Curses.MinWindowWidth + "x" + Curses.MinWindowHeight + " console window size to run (current: " + Term.WindowWidth + "x" + Term.WindowHeight + ").\n\n");
 			return;
 		}
 		bool flag = false;
 		try
 		{
-			Console.BufferHeight = (Console.BufferWidth = 0);
+			Term.BufferHeight = (Term.BufferWidth = 0);
 			flag = true;
 			InitializationStatus += "R";
 		}
@@ -126,8 +126,8 @@ internal static class Grog
 		{
 			try
 			{
-				Console.BufferHeight = 26;
-				Console.BufferWidth = 80;
+				Term.BufferHeight = 26;
+				Term.BufferWidth = 80;
 				InitializationStatus += "P";
 			}
 			catch (Exception)
@@ -148,7 +148,7 @@ internal static class Grog
 	{
 		try
 		{
-			Console.Title = "Grog 1.0.2 [" + Console.WindowWidth + "x" + Console.WindowHeight + "|" + Console.BufferWidth + "x" + Console.WindowHeight + ":" + InitializationStatus + (int)Environment.OSVersion.Platform + "] - " + Copyright1;
+			Term.Title = "Grog 1.0.2 [" + Term.WindowWidth + "x" + Term.WindowHeight + "|" + Term.BufferWidth + "x" + Term.WindowHeight + ":" + InitializationStatus + (int)Environment.OSVersion.Platform + "] - " + Copyright1;
 		}
 		catch (Exception)
 		{
