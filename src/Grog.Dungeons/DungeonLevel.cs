@@ -1634,7 +1634,7 @@ public class DungeonLevel
 				{
 					Curses.Instance.ClearToEndOfLine();
 				}
-				Curses.Instance.SetCursorPosition(Curses.Instance.WindowWidth - num6 + 14 + ((num3 > 1) ? 16 : 0), list8.Count + list2.Count + ((headline != null) ? 1 : 0));
+				Curses.Instance.SetCursorPosition(Math.Min(Curses.Instance.WindowWidth - 1, Curses.Instance.WindowWidth - num6 + 14 + ((num3 > 1) ? 16 : 0)), list8.Count + list2.Count + ((headline != null) ? 1 : 0));
 			}
 			ConsoleKeyInfo consoleKeyInfo = Curses.Instance.ReadKey(showReadKey: false, printChoice);
 			c = consoleKeyInfo.KeyChar;

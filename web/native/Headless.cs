@@ -37,7 +37,7 @@ namespace GrogHeadless{
 			--left;
 			if(scr.Contains("[Press '!' to continue]")) return K('!');
 			int roll = rng.Next(100);
-			if(roll < 30){ ConsoleKeyInfo k; Term.FromBrowser(specials[rng.Next(specials.Length)],"",false,false,false,out k); return k; }
+			if(roll < 60){ ConsoleKeyInfo k; Term.FromBrowser(specials[rng.Next(specials.Length)],"",false,false,false,out k); return k; }
 			return K(pool[rng.Next(pool.Length)]);
 		}
 		public void Sleep(int ms){}
