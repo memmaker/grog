@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+  <!-- RVIP web build: .NET 10 browser-wasm (Mono interpreter), run inside a module Web Worker (web/worker.js) -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable>
+    <LangVersion>14.0</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>$(DefineConstants);WEB</DefineConstants>
+    <NoWarn>$(NoWarn);CS0162;CS0168;CS0219;CS0414;CS0649;CS0169;CS8632;CA1416;SYSLIB0011;SYSLIB0050;SYSLIB0051</NoWarn>
+    <StartupObject>GrogWeb.WebMain</StartupObject>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+    <PublishTrimmed>false</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+    <WasmEnableThreads>false</WasmEnableThreads>
+    <CompressionEnabled>false</CompressionEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/**/*.cs" Exclude="../../src/obj/**;../../src/bin/**" />
+    <Compile Include="WebBackend.cs" />
+    <EmbeddedResource Include="../../src/Grog.version.txt" LogicalName="Grog.version.txt" />
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="10.0.0" />
+    <!-- saves are BinaryFormatter graphs of game types: keep the game assembly whole -->
+    <TrimmerRootAssembly Include="GrogWeb" />
+    <TrimmerRootAssembly Include="System.Runtime.Serialization.Formatters" />
+  </ItemGroup>
+</Project>
