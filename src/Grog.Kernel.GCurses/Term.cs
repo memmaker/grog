@@ -72,6 +72,7 @@ public static class Term
 	}
 	public static string LastBeacon;
 	public static bool MainView, AtCmd, Clickable;
+	public static int HeroX = -1, HeroY = -1; // hero's screen cell while the map screen is up
 	public static string PromptRow = "";
 
 	static int[] cells;
@@ -89,7 +90,8 @@ public static class Term
 		var row = new System.Text.StringBuilder();
 		for (int x = 0; x < w; x++) row.Append(t.GetCharacter(x, 0));
 		PromptRow = row.ToString().TrimEnd();
-		Backend.Present(cells, w, h, cx, cy, cursorVisible);
+		// RVIP: no cursor on the hero (the map shows where Grog is)
+		Backend.Present(cells, w, h, cx, cy, cursorVisible && !(MainView && cx == HeroX && cy == HeroY));
 	}
 
 	// Browser KeyboardEvent (code, key) -> ConsoleKeyInfo

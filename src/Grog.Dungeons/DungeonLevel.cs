@@ -179,6 +179,7 @@ public partial class DungeonLevel
 		}
 		Curses.Instance.ClearToEndOfLine();
 		Term.MainView = true; Term.Clickable = false; // RVIP 5: map screen
+		if (Grog != null) { Term.HeroX = Grog.X; Term.HeroY = Grog.Y + 2; } // RVIP: no cursor on the hero
 		while (true)
 		{
 			Curses.Instance.SetCursorPosition(0, 0);
