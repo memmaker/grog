@@ -158,3 +158,12 @@ mode shows the whole screen without hero centring when it fits.
   "found your autosaved game" in the browser. Tested: reload continues, Ctrl+q deletes it.
 
 **Next:** stage 7 (publish).
+
+### Stage 7 — Publish (done)
+
+- Repo memmaker/grog (remote `memmaker`, branch `main`; base = decompiled grog.exe 1.0.2 @ `1a0362c`).
+- Card + tree on the selection page (roguelikes-index `7a2e525`): year 2023 (1.0.2, roguelike.games),
+  tree `insp` under Rogue ("1.0.0 2022, begun 2018"). Card image `img/grog.png` = 68x18 cells of a
+  headless run (`NOMON=1 KEYS=<Esc>ggg… CELLS=file`, seed 5; `Headless.cs` writes raw cells), drawn
+  in Menlo with the game's palette. og block in `web/index.html`.
+- Next: stage 8 shrine (no manual file; title screen "All rights reserved").

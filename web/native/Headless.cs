@@ -49,7 +49,7 @@ namespace GrogHeadless{
 		}
 		public void Sleep(int ms){}
 		public void Beep(){}
-		public void Present(int[] cells,int c,int r,int x,int y,bool vis){ last = cells; cols = c; ++presents; }
+		public void Present(int[] cells,int c,int r,int x,int y,bool vis){ last = (int[])cells.Clone(); cols = c; ++presents; }
 		public string Dump(){
 			if(last == null) return "";
 			var sb = new System.Text.StringBuilder();
@@ -81,6 +81,8 @@ namespace GrogHeadless{
 			}
 			Console.WriteLine("seed " + seed + " " + how + " loaded " + Loaded + " presents " + h.presents + " files " + string.Join(",", Array.ConvertAll(Directory.GetFiles("."), Path.GetFileName)) + " rc " + rc);
 			if(Environment.GetEnvironmentVariable("DUMP") != null) Console.WriteLine(h.Dump());
+			var cf = Environment.GetEnvironmentVariable("CELLS"); //card image: raw cells (char,fg,bg) + cols
+			if(cf != null && h.last != null) File.WriteAllText(cf, h.cols + "\n" + string.Join(",", h.last));
 			Environment.Exit(rc);
 		}
 	}
