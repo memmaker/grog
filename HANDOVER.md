@@ -9,6 +9,28 @@ e3a6b5ad49a1d3e5ce333cbe8d58b16a257f679141dd98df47bfa97266fb63d2, in-game versio
 
 ## RVIP progress
 
+**Status (2026-09-29): complete.** All 9 stages + finetuning pass, merged on `main`,
+deployed at https://ruzzoli.de/roguelikes/grog/, repo https://github.com/memmaker/grog,
+shrine https://ruzzoli.de/roguelikes/shrine/grog.html. Text only (user's choice).
+
+Quick reference:
+- Build: `export PATH="$HOME/.dotnet:$PATH" DOTNET_ROOT="$HOME/.dotnet"; sh web/build.sh` → `web/dist`
+  (5.4 MB, ~1.7 MB brotli; `TrimMode=partial` + `TrimmerRootAssembly mscorlib`, needed by BinaryFormatter).
+- Local: `python3 web/serve.py 8431` → http://127.0.0.1:8431/grog/. Deploy: `web/deploy.sh` (pushed, clean tree only;
+  dirty tree → deploy from a fresh clone).
+- Headless: `sh web/native/run-seeds.sh [first] [count] [keys]`; `KEYS=`, `NOMON=1`, `IMMORTAL=1`, `CELLS=`.
+
+Open problems:
+- Autosave after taking stairs: a reload right after `>` resumed on the old level (D:1 instead of D:2).
+  Autosave (`Game.Save(42)` before the command `ReadKey` in `src/Grog/Grog.cs`) seems to skip until the next
+  move counter change. Not investigated.
+- Grog's own score formula gives fast wins a negative score (`(Moves − 15000) * 50` when Moves < 15000);
+  beacon sends it unchanged. Ask the user before changing.
+- Card/tree year is 2023 (1.0.2 release), not 2018 (begun); user not yet asked to confirm.
+- Not tested live: a real win (only forced `IMMORTAL=1`), browser death beacon, ghost/revenge file written by
+  the web build, fresh save → reload in the trimmed build, Ctrl+Q at zero score writes no high score (likely by design).
+- Status window omits the inverted HP bar.
+
 ### Stage 1 — Get + build (done)
 
 - Folder `~/Games/grog`, branch `main`, no remote yet. Case **O** (C# console
@@ -200,7 +222,7 @@ mode shows the whole screen without hero centring when it fits.
 - Open: upstream score formula subtracts for a fast immortal exit (`(Moves − 15000) * 50` when
   Moves < 15000) → a quick win can score negative; sent as the game computes it.
 
-### RVIP finetuning (branch `claude/rvip-finetuning`, not merged, not deployed)
+### RVIP finetuning (done; merged into main 6901f10, deployed)
 
 Items of `rvip-tools/RVIP-Finetuning.md` for a text-only C# game:
 - `<` / `>` only walk to the stairs; the key again takes them (`AutoExploreAction.Execute`; help, Enter menu, make-help texts).
