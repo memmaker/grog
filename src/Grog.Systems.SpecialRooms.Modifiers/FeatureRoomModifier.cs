@@ -11,13 +11,13 @@ public class FeatureRoomModifier : RoomModifierBase
 	[Serializable]
 	public class DisplaySpecialMessageIfFeatureTypeExists : ISpecialMessageProvider
 	{
-		private readonly Type _featureType;
+		private readonly string _featureType; //type name: .NET 10 BinaryFormatter cannot save System.Type
 
 		private readonly string _message;
 
 		public DisplaySpecialMessageIfFeatureTypeExists(Type featureType, string message)
 		{
-			_featureType = featureType;
+			_featureType = featureType.FullName;
 			_message = message;
 		}
 
@@ -26,7 +26,7 @@ public class FeatureRoomModifier : RoomModifierBase
 			foreach (Position insidePosition in room.GetInsidePositions())
 			{
 				Feature featureAt = dungeonLevel.GetFeatureAt(insidePosition.X, insidePosition.Y);
-				if (featureAt != null && featureAt.GetType() == _featureType)
+				if (featureAt != null && featureAt.GetType().FullName == _featureType)
 				{
 					return _message;
 				}

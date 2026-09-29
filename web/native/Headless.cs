@@ -34,6 +34,11 @@ namespace GrogHeadless{
 			}
 			string scr = Dump();
 			if(scr.Contains("Internal Error")) internalError = true;
+			if(scr.Contains("crashed") || scr.Contains("Error while")){ Console.WriteLine(scr); HeadlessMain.Finish("crash"); }
+			if(Environment.GetEnvironmentVariable("DESCEND") != null){ //scripted tests: take the down stairs every key
+				var lv = global::Grog.Kernel.Game.Instance?.DungeonMaster?.CurrentDungeonLevel;
+				if(lv != null && lv.Grog != null){ var sp = lv.FindPositionOfTile(global::Grog.Dressings.Tile.StairDown); if(!sp.Equals(global::Grog.Dungeons.Position.Undefined)){ lv.Grog.HasGainedImmortality = true; lv.GetTileAt(sp).Interaction.Interact(lv, lv.Grog); Console.WriteLine("depth now " + global::Grog.Kernel.Game.Instance.DungeonMaster.CurrentDungeonLevel.Level); } }
+			}
 			if(script.Count > 0 && scr.Contains("---more---") && Environment.GetEnvironmentVariable("KEYS") != null) return K(' '); //scripted tests: pass --more-- prompts
 			if(script.Count > 0) return script.Dequeue();
 			if(scr.Contains("play again")) HeadlessMain.Finish("game over");
