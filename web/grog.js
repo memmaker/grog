@@ -97,18 +97,18 @@ function draw() {
 	requestAnimationFrame(draw);
 	if (!dirty || !scr || !wm) return;
 	dirty = false;
-	const p = L.px, c = $('map').querySelector('canvas'), full = $('full');
+	const p = L.px, face = faceOf(L.mapFace), c = $('map').querySelector('canvas'), full = $('full');
 	const whole = one() || !info.main || !info.map;
 	full.hidden = one() || !!info.main;
 	full.classList.toggle('click', !!info.click);
-	if (!full.hidden) fullText(full.firstElementChild, p);
+	if (!full.hidden) fullText(full.firstElementChild);
 	const r0 = whole ? 0 : info.map[0], R = whole ? ROWS : info.map[1];
-	ctx.font = p + 'px ' + FONT;
+	ctx.font = p + 'px ' + face;
 	const w = Math.ceil(ctx.measureText('M').width), h = cellH = Math.ceil(p * 1.2);
 	if (c.width !== Math.round(COLS * w * dpr) || c.height !== Math.round(R * h * dpr)) { c.width = Math.round(COLS * w * dpr); c.height = Math.round(R * h * dpr); }
 	c.style.width = COLS * w + 'px'; c.style.height = R * h + 'px';
 	const g = c.getContext('2d');
-	g.setTransform(dpr, 0, 0, dpr, 0, 0); g.font = p + 'px ' + FONT; g.textBaseline = 'middle'; g.textAlign = 'center';
+	g.setTransform(dpr, 0, 0, dpr, 0, 0); g.font = p + 'px ' + face; g.textBaseline = 'middle'; g.textAlign = 'center';
 	for (let r = 0; r < R; r++) for (let k = 0; k < COLS; k++) {
 		const i = ((r0 + r) * COLS + k) * 3, x = k * w, y = r * h;
 		g.fillStyle = hex(scr[i + 2]); g.fillRect(x, y, w, h);
@@ -120,8 +120,9 @@ function draw() {
 	else RvipWM.center(c, 0, 0, COLS * w, R * h);
 	c._r0 = r0;
 }
-/* the whole screen as HTML text (runs of one colour pair) */
-function fullText(pre, p) {
+/* the whole screen as HTML text (runs of one colour pair); its text size follows Messages (A-/A+ there) */
+function fullText(pre) {
+	const p = RvipWM.fontSize('msg');
 	pre.style.fontSize = p + 'px'; pre.style.lineHeight = Math.ceil(p * 1.2) + 'px';
 	let html = '';
 	for (let r = 0; r < ROWS; r++) {
@@ -139,7 +140,8 @@ function fullText(pre, p) {
 /* mouse: a click on a row of a menu or item list sends that row; the game picks the entry */
 function clickRow(e, el, r0) {
 	if (!info.click || !app.running) return;
-	const b = el.getBoundingClientRect(), row = Math.floor((e.clientY - b.top) / cellH) + r0;
+	const b = el.getBoundingClientRect(), h = el.tagName === 'PRE' ? parseFloat(el.style.lineHeight) : cellH;
+	const row = Math.floor((e.clientY - b.top) / h) + r0;
 	if (row >= 0 && row < ROWS) sendKey('RvipRow', String(row), '');
 }
 function update(i) {
@@ -160,7 +162,8 @@ function update(i) {
 }
 function saveLayout() { clearTimeout(saveT); saveT = setTimeout(() => putFile('web-layout.json', new TextEncoder().encode(JSON.stringify(L))), 300); }
 async function makeWM() {
-	try { const d = await getFile('web-layout.json'); if (d) { const s = JSON.parse(new TextDecoder().decode(d)); L = { px: s.px >= 8 && s.px <= 48 ? s.px : 16, wm: s.wm, sound: !!s.sound }; } } catch (_) { }
+	try { const d = await getFile('web-layout.json'); if (d) { const s = JSON.parse(new TextDecoder().decode(d)); L = { px: s.px >= 8 && s.px <= 48 ? s.px : 16, wm: s.wm, sound: !!s.sound, face: s.face || '', mapFace: s.mapFace || '' }; } } catch (_) { }
+	loadFace(L.face); loadFace(L.mapFace);
 	wm = RvipWM({
 		area: $('game'), menu: $('btn-layout'),
 		wins: [{ id: 'map', title: 'Map' }, { id: 'msg', title: 'Messages' }, { id: 'stat', title: 'Status' },
@@ -168,12 +171,34 @@ async function makeWM() {
 		multi: { d: 'h', r: 0.7, a: { d: 'v', r: 0.8, a: 'map', b: 'stat' }, b: { d: 'v', r: 0.4, a: 'msg', b: { d: 'v', r: 0.6, a: 'inv', b: 'vis' } } },
 		single: 'map', state: L.wm,
 		save: st => { L.wm = st; saveLayout(); },
-		layout: r => { rects = r; dirty = true; update(info); },
-		zoom: { map: (p, d) => { L.px = Math.max(8, Math.min(48, L.px + d)); saveLayout(); dirty = true; } },
+		layout: r => { rects = r; dirty = true; update(info); renderMapSel(); },
+		zoom: { map: (p, d) => { L.px = Math.max(8, Math.min(48, L.px + d)); saveLayout(); dirty = true; }, msg: () => { dirty = true; } },
 		size: { map: () => L.px },
 		onReset: () => { L.px = 16; L.wm = wm.state(); saveLayout(); dirty = true; }
 	});
 	wm.apply();
+	renderMapSel();
+}
+/* fonts: the top-bar choice (L.face) for every text window and the whole-screen view,
+   the map's own (L.mapFace, a select on its title bar) for the map canvas */
+const faceOf = n => n ? '"' + n + '", ' + FONT : FONT;
+function faces() {
+	['msgb', 'stat', 'inv', 'vis', 'fullpre'].forEach(id => { (id === 'fullpre' ? $('full').firstElementChild : $(id)).style.fontFamily = L.face ? faceOf(L.face) : ''; });
+	dirty = true;
+}
+function loadFace(n) {
+	if (!n) { faces(); return; }
+	const ff = new FontFace(n, 'url(../fonts/' + n + '.woff)');
+	ff.load().then(() => { document.fonts.add(ff); faces(); }).catch(() => app.status('Could not load the font ' + n + '.', true));
+}
+const mapSel = document.createElement('select');
+mapSel.title = 'Map font'; mapSel.innerHTML = '<option value="">Default font</option>';
+mapSel.addEventListener('pointerdown', e => e.stopPropagation()); /* not a window drag */
+mapSel.addEventListener('mousedown', e => e.stopPropagation());
+function renderMapSel() {
+	const bs = document.querySelector('#t-map .wm-btns');
+	if (bs && mapSel.parentNode !== bs) bs.insertBefore(mapSel, bs.firstChild);
+	mapSel.value = L.mapFace || '';
 }
 
 /* ---------- worker ---------- */
@@ -201,6 +226,7 @@ window.grog = {
 	key: sendKey,
 	get running() { return app.running; },
 	get info() { return info; },
+	get cur() { return cur; },
 };
 
 async function main() {
@@ -208,6 +234,15 @@ async function main() {
 	$('btn-restart').onclick = () => location.reload();
 	RvipWM.dropdown($('btn-file'), $('menu-file'));
 	RvipWM.dropdown($('btn-audio'), $('menu-audio'));
+	fetch('fonts.json').then(r => r.json()).then(list => {
+		[[$('sel-font'), 'face'], [mapSel, 'mapFace']].forEach(([sel, k]) => {
+			list.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n.replace(/^Web(Plus|437)_/, '').replace(/_/g, ' '); sel.appendChild(o); });
+			sel.value = L[k] || '';
+		});
+	}).catch(() => { });
+	[[$('sel-font'), 'face'], [mapSel, 'mapFace']].forEach(([sel, k]) => {
+		sel.onchange = function () { L[k] = this.value; saveLayout(); loadFace(this.value); this.blur(); };
+	});
 	$('chk-sound').onchange = function () { L.sound = this.checked; saveLayout(); this.blur(); };
 	document.querySelectorAll('#bar button').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
 	$('full').addEventListener('click', e => clickRow(e, $('full').firstElementChild, 0));
