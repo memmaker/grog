@@ -370,8 +370,8 @@ public class Game
 		array[11] = Instance.Grog.Moves.ToString();
 		array[12] = ") ";
 		SaveGameSummary data = new SaveGameSummary(1, string.Concat(array));
-		FileManager.WriteObject(GetSaveGameSummaryFileName(index), data);
 		FileManager.WriteObject(GetSaveGameFileName(index), Instance);
+		FileManager.WriteObject(GetSaveGameSummaryFileName(index), data);
 	}
 
 	private static string GetSaveGameFileName(int index)
