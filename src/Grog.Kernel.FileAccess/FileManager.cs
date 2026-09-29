@@ -82,9 +82,10 @@ public static class FileManager
 	public static void WriteObject<OT>(string fileName, OT data, Environment.SpecialFolder folder = Environment.SpecialFolder.Personal)
 	{
 		string fullPath = GetFullPath(fileName, folder);
+		string tmpPath = fullPath + ".tmp"; //atomic: a failed write leaves the old file intact
 		try
 		{
-			Stream stream = new GZipStream(File.OpenWrite(fullPath), CompressionMode.Compress);
+			Stream stream = new GZipStream(File.Create(tmpPath), CompressionMode.Compress);
 			try
 			{
 				new BinaryFormatter { SurrogateSelector = new DelegateSurrogateSelector() }.Serialize(stream, data);
@@ -93,9 +94,11 @@ public static class FileManager
 			{
 				stream.Close();
 			}
+			File.Move(tmpPath, fullPath, true);
 		}
 		catch (Exception ex)
 		{
+			try { File.Delete(tmpPath); } catch (Exception) { }
 			Game.RaiseError("Error while trying to write '" + fullPath + "': " + ex.Message + "\n" + ex.StackTrace);
 		}
 	}
