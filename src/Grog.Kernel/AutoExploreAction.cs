@@ -55,8 +55,7 @@ public class AutoExploreAction : IAutomaticAction
 		}
 		if (_stairs != null && _level.GetTileAt(_grog.X, _grog.Y) == _stairs)
 		{
-			_grog.ResetAutomaticAction();
-			_stairs.Interaction.Interact(_level, _grog);
+			_grog.ResetAutomaticAction(); // RVIP: only walk there; the key again takes the stairs
 			return false;
 		}
 		if ((DungeonLevel.MessageSerial != _serial && !Game.Instance.IsFirstTurnWithAutomaticAction) || VisibleMonster(_grog, _level))
