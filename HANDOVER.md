@@ -167,3 +167,13 @@ mode shows the whole screen without hero centring when it fits.
   headless run (`NOMON=1 KEYS=<Esc>ggg… CELLS=file`, seed 5; `Headless.cs` writes raw cells), drawn
   in Menlo with the game's palette. og block in `web/index.html`.
 - Next: stage 8 shrine (no manual file; title screen "All rights reserved").
+
+### Stage 8 — Shrine (done)
+
+- Page `roguelikes-index/shrine/grog.html` + `shrine/grog/manual.html` (the original 1.0.2
+  `HelpText` from `1a0362c`, one `<pre>` per topic; no manual file exists, game is "all rights
+  reserved" freeware, so nothing else copied). Card Info + tree ✦ (roguelikes-index `c8d95af`),
+  game title links to it (`web/index.html`).
+- Cheats: `CheatMode.cs` (Ctrl+x) opens only for a male "Brannalbin" of type "wizard";
+  kept in our build; cheated runs get no high score.
+- No walkthrough found. Next: stage 9 (graveyard + leaderboard).
