@@ -72,6 +72,10 @@ public class AutoExploreAction : IAutomaticAction
 			return false;
 		}
 		Note(_level, _grog);
+		if (global::Grog.Kernel.GCurses.Term.Backend != null && !Game.Instance.IsFirstTurnWithAutomaticAction)
+		{
+			global::Grog.Kernel.GCurses.Term.Sleep(40); // RVIP: each explore / stairs step gets painted
+		}
 		int moves = _grog.Moves;
 		_serial = DungeonLevel.MessageSerial; // messages of this step stop the next one
 		switch (d.Value)
