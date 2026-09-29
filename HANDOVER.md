@@ -38,8 +38,8 @@ Text only. Card/tree year 2023 (1.0.2 release; confirmed by the user).
 - The "stood next to" part of the explore known-grid is not saved (explore may revisit tunnel ends once
   after load).
 - The message of an item action is not visible when the item list reopens (it is in `MessageLog`).
-- Sound: the WAVs are synthesized (`web/make-sounds.py`); Stage 6 allows only upstream audio for
-  non-Angband games, and Grog has none but `Console.Beep` (web search still to note).
+- Sound: the Stage 6 web search for upstream sound/music is still to note (upstream has only
+  `Console.Beep`; the game-specific synthesized WAVs from `web/make-sounds.py` are fine).
 
 ## Port notes
 
