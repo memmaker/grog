@@ -16,7 +16,7 @@ e3a6b5ad49a1d3e5ce333cbe8d58b16a257f679141dd98df47bfa97266fb63d2, in-game versio
 - **Native:** `cd src && dotnet build` (net10.0, `System.Runtime.Serialization.Formatters`
   10.0.0 + `EnableUnsafeBinaryFormatterSerialization`). Plays in a real 80x26 terminal only
   (non-tty reports 0x0 and quits).
-- **Web:** `sh web/build.sh` → `web/dist` (23 MB, **untrimmed**). Project
+- **Web:** `sh web/build.sh` → `web/dist` (5.4 MB, trimmed `TrimMode=partial`, mscorlib rooted for BinaryFormatter; was 23 MB untrimmed). Project
   `web/wasm/GrogWeb.csproj` (browser-wasm, compiles `src/**/*.cs` + `web/wasm/WebBackend.cs`).
   Runtime in a module worker (`web/worker.js`), keys via SharedArrayBuffer + `Atomics.wait`.
   Page `web/index.html` + `web/grog.js` (whole 80x26 screen on a canvas in the Map window;
@@ -44,8 +44,9 @@ e3a6b5ad49a1d3e5ce333cbe8d58b16a257f679141dd98df47bfa97266fb63d2, in-game versio
   by the same surrogate selector (wasm); item list cursor past column 79 (upstream bug).
   `ReadObject` failures now logged to gcrash (logOnly).
 
-**Stage 1 open:** trimmed build breaks BinaryFormatter
-(`Converter` type initializer) → shipped untrimmed; the page is one Map window with the whole
+**Stage 1 open:** (trimming solved: root `mscorlib`, whose Assembly.Load in `Converter..cctor`
+failed; tested save/load of untrimmed saves, autosave 42, options, high score, ghost/revenge files,
+Export/Import; Import also fixed in `grog.js`) the page is one Map window with the whole
 screen (panes/sub-windows are stage 5).
 
 ### Stage 2 — Explore + stairs (done)
