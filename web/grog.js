@@ -98,26 +98,24 @@ function draw() {
 	if (!dirty || !scr || !wm) return;
 	dirty = false;
 	const face = faceOf(L.mapFace), c = $('map').querySelector('canvas');
-	const whole = one() || !info.main || !info.map;
-	const r0 = whole ? 0 : info.map[0], R = whole ? ROWS : info.map[1];
+	// the whole screen's grid, always: menus and the map share one cell size and position (no jump);
+	// on the map screen in multi mode only the map rows are drawn (status etc. have their windows)
+	const only = !one() && info.main && info.map ? info.map : null, r0 = 0, R = ROWS;
 	ctx.font = '100px ' + face;
 	const mw = ctx.measureText('M').width / 100, vb = c.parentNode;
-	const p = Math.max(4, Math.floor(Math.min(vb.clientWidth / COLS / mw, vb.clientHeight / R / 1.2)) - 1);
-	ctx.font = p + 'px ' + face;
-	const w = Math.ceil(ctx.measureText('M').width), h = cellH = Math.ceil(p * 1.2);
-	if (c.width !== Math.round(COLS * w * dpr) || c.height !== Math.round(R * h * dpr)) { c.width = Math.round(COLS * w * dpr); c.height = Math.round(R * h * dpr); }
-	c.style.width = COLS * w + 'px'; c.style.height = R * h + 'px';
+	const p = Math.max(4, Math.min(vb.clientWidth / COLS / mw, vb.clientHeight / R / 1.2));
+	const w = mw * p, h = cellH = p * 1.2, cw = COLS * w, ch = R * h;
+	if (c.width !== Math.round(cw * dpr) || c.height !== Math.round(ch * dpr)) { c.width = Math.round(cw * dpr); c.height = Math.round(ch * dpr); }
+	c.style.width = cw + 'px'; c.style.height = ch + 'px';
 	const g = c.getContext('2d');
 	g.setTransform(dpr, 0, 0, dpr, 0, 0); g.font = p + 'px ' + face; g.textBaseline = 'middle'; g.textAlign = 'center';
 	for (let r = 0; r < R; r++) for (let k = 0; k < COLS; k++) {
-		const i = ((r0 + r) * COLS + k) * 3, x = k * w, y = r * h;
-		g.fillStyle = hex(scr[i + 2]); g.fillRect(x, y, w, h);
-		if (scr[i] > 32) { g.fillStyle = hex(scr[i + 1]); g.fillText(String.fromCharCode(scr[i]), x + w / 2, y + h / 2 + 1); }
+		const i = (r * COLS + k) * 3, x = k * w, y = r * h, off = only && (r < only[0] || r >= only[0] + only[1]);
+		g.fillStyle = hex(scr[off ? 2 : i + 2]); g.fillRect(Math.floor(x), Math.floor(y), Math.ceil(x + w) - Math.floor(x), Math.ceil(y + h) - Math.floor(y));
+		if (!off && scr[i] > 32) { g.fillStyle = hex(scr[i + 1]); g.fillText(String.fromCharCode(scr[i]), x + w / 2, y + h / 2 + 1); }
 	}
-	const cy = cur.y - r0;
-	if (cur.vis && cy >= 0 && cy < R) { g.fillStyle = hex(scr[(cur.y * COLS + cur.x) * 3 + 1]); g.fillRect(cur.x * w, cy * h + h - 3, w, 2); }
-	if (info.hero && (info.main || !whole)) RvipWM.center(c, (info.hero[0] + 0.5) * w, (info.hero[1] - r0 + 0.5) * h, COLS * w, R * h);
-	else RvipWM.center(c, 0, 0, COLS * w, R * h);
+	if (cur.vis) { g.fillStyle = hex(scr[(cur.y * COLS + cur.x) * 3 + 1]); g.fillRect(cur.x * w, cur.y * h + h - 3, w, 2); }
+	RvipWM.center(c, 0, 0, cw, ch);
 	c._r0 = r0;
 }
 /* mouse: a click on a row of a menu or item list sends that row; the game picks the entry */
@@ -216,9 +214,9 @@ async function main() {
 	$('btn-restart').onclick = () => location.reload();
 	RvipWM.dropdown($('btn-file'), $('menu-file'));
 	RvipWM.dropdown($('btn-audio'), $('menu-audio'));
-	fetch('fonts.json').then(r => r.json()).then(list => {
+	RvipWM.fonts.then(list => {
 		[[$('sel-font'), 'face'], [mapSel, 'mapFace']].forEach(([sel, k]) => {
-			list.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n.replace(/^Web(Plus|437)_/, '').replace(/_/g, ' '); sel.appendChild(o); });
+			RvipWM.fontOptions(sel);
 			sel.value = L[k] || '';
 		});
 	}).catch(() => { });
