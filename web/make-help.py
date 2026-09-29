@@ -11,7 +11,7 @@ out = ['<h2>Grog</h2><p>Grog (2018) by Thomas Biskup, the author of ADOM: a smal
        '<div class="box key"><h3>Keys to remember</h3><dl>'
        '<dt><kbd>h</kbd> <kbd>?</kbd></dt><dd>the game\'s own help</dd>'
        '<dt><kbd>g</kbd></dt><dd>explore automatically (stops on danger or news)</dd>'
-       '<dt><kbd>&lt;</kbd> <kbd>&gt;</kbd></dt><dd>walk to known stairs and take them</dd>'
+       '<dt><kbd>&lt;</kbd> <kbd>&gt;</kbd></dt><dd>walk to known stairs; press again on them to take them</dd>'
        '<dt><kbd>Enter</kbd></dt><dd>menu of all commands (click an entry, or arrows + Enter)</dd>'
        '<dt><kbd>i</kbd></dt><dd>inventory: letter = main action, Enter or a click = item menu</dd>'
        '<dt><kbd>Q</kbd></dt><dd>save and quit</dd></dl></div>']

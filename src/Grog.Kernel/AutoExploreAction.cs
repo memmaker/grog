@@ -55,8 +55,7 @@ public class AutoExploreAction : IAutomaticAction
 		}
 		if (_stairs != null && _level.GetTileAt(_grog.X, _grog.Y) == _stairs)
 		{
-			_grog.ResetAutomaticAction();
-			_stairs.Interaction.Interact(_level, _grog);
+			_grog.ResetAutomaticAction(); // RVIP: only walk there; the key again takes the stairs
 			return false;
 		}
 		if ((DungeonLevel.MessageSerial != _serial && !Game.Instance.IsFirstTurnWithAutomaticAction) || VisibleMonster(_grog, _level))
@@ -73,6 +72,11 @@ public class AutoExploreAction : IAutomaticAction
 			return false;
 		}
 		Note(_level, _grog);
+		if (global::Grog.Kernel.GCurses.Term.Backend != null && !Game.Instance.IsFirstTurnWithAutomaticAction)
+		{
+			global::Grog.Kernel.GCurses.Curses.Instance.Refresh(); // the loop rendered this turn; show it
+			global::Grog.Kernel.GCurses.Term.Sleep(40); // RVIP: each explore / stairs step gets painted
+		}
 		int moves = _grog.Moves;
 		_serial = DungeonLevel.MessageSerial; // messages of this step stop the next one
 		switch (d.Value)

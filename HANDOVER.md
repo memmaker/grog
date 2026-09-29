@@ -199,3 +199,18 @@ mode shows the whole screen without hero centring when it fits.
 - Killer art: `roguelikes-index/killers/grog/` (53, glyph black on white in Menlo, `make.py grog`).
 - Open: upstream score formula subtracts for a fast immortal exit (`(Moves − 15000) * 50` when
   Moves < 15000) → a quick win can score negative; sent as the game computes it.
+
+### RVIP finetuning (branch `claude/rvip-finetuning`, not merged, not deployed)
+
+Items of `rvip-tools/RVIP-Finetuning.md` for a text-only C# game:
+- `<` / `>` only walk to the stairs; the key again takes them (`AutoExploreAction.Execute`; help, Enter menu, make-help texts).
+- Enter menu: Movement group dropped (`CommandMenu.cs`).
+- Explore / stairs walk visible: `Curses.Refresh()` + `Term.Sleep(40)` per step (the loop's `Render` alone presents nothing until the next key wait).
+- No cursor on the hero: `Term.HeroX/HeroY` set in `DungeonLevel.Render`, `Term.Present` hides the cursor there while the map screen is up.
+- Fonts: top-bar select (text windows + whole-screen view), map select on the Map title bar; `fonts.json` from `build.sh`; `face`/`mapFace` in `web-layout.json`. Top bar: Help, File | Windows, Font, Audio.
+- Whole-screen view (`#full pre`: menus, lists, help) sizes with Messages A−/A+ (`RvipWM.fontSize('msg')`); row clicks use its line height.
+- Status window: no empty second line.
+Already there: map zoom on its title bar, WM per-window sizes, Messages from the top + scrolled to the end (rvip-wm `setLog`), RvipApp, own IndexedDB `/grog/files`, dropdowns, key hints, no text canvas.
+n/a: all tile/icon/DawnLike items (text only), Tiles: None, emcc signature check (C#), pop-ups via `RvipWM.popup` (the game draws its menus into the screen, shown as the whole-screen view), inventory pane colours (Grog's items have no kind colours; equipped = bold in both), DASP miss sound (synthesized WAVs), visibilitychange autosave (autosave at the command prompt, does not draw).
+Tests: browser pane (explore steps 1 cell per ~40 ms, `>` stops on the stairs then descends, cursor hidden on hero, Enter menu, row click, fonts, A+ on Messages → whole-screen 13→15 px); `run-seeds.sh 1 8 4000` clean.
+Note: the browser pane is hidden → `requestAnimationFrame` does not run; take a small screenshot to make `draw()` run before checking `#full`.
