@@ -50,6 +50,11 @@ public static class Term
 	public static void WriteLine(string s) { if (Backend == null) Console.WriteLine(s); }
 	public static void ReadLine() { if (Backend == null) Console.ReadLine(); }
 
+	// RVIP stage 5: window info for the page (JSON, built by the game), and the flags it reads
+	public static Func<string> Info;
+	public static bool MainView, AtCmd, Clickable;
+	public static string PromptRow = "";
+
 	static int[] cells;
 	internal static void Present(CursesTerminal t, int cx, int cy)
 	{
@@ -62,6 +67,9 @@ public static class Term
 				cells[n++] = Palette[(int)t.GetForegroundColor(x, y) & 15];
 				cells[n++] = Palette[(int)t.GetBackgroundColor(x, y) & 15];
 			}
+		var row = new System.Text.StringBuilder();
+		for (int x = 0; x < w; x++) row.Append(t.GetCharacter(x, 0));
+		PromptRow = row.ToString().TrimEnd();
 		Backend.Present(cells, w, h, cx, cy, cursorVisible);
 	}
 
@@ -87,6 +95,7 @@ public static class Term
 		case "PageDown": ck = ConsoleKey.PageDown; break;
 		case "Delete": ck = ConsoleKey.Delete; break;
 		case "Insert": ck = ConsoleKey.Insert; break;
+		case "RvipRow": if (!int.TryParse(key, out int row)) return false; ck = ConsoleKey.F24; ch = (char)(0xE000 + row); break; // mouse click on screen row
 		default:
 			if (code.StartsWith("Numpad") && code.Length == 7 && char.IsDigit(code[6]))
 			{

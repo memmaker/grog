@@ -21,7 +21,62 @@ public partial class DungeonLevel
 	{
 		if (string.IsNullOrEmpty(m)) return;
 		MessageLog.Add(char.ToUpper(m[0]) + m.Substring(1));
+		LogSerial++;
 		if (MessageLog.Count > 200) MessageLog.RemoveAt(0);
+	}
+
+	// RVIP stage 5: what the page's windows show, as JSON (Term.Info). Every string trimmed here.
+	static int LogSerial, _sentLog = -1;
+	[NonSerialized] static string[] _status = new string[0];
+	static string J(string t)
+	{
+		var b = new System.Text.StringBuilder("\"");
+		foreach (char ch in t ?? "")
+			if (ch == '"' || ch == '\\') b.Append('\\').Append(ch);
+			else if (ch < ' ') b.Append("\\u").Append(((int)ch).ToString("x4"));
+			else b.Append(ch);
+		return b.Append('"').ToString();
+	}
+	static string Arr(IEnumerable<string> xs) => "[" + string.Join(",", xs) + "]";
+	public static string RvipInfo()
+	{
+		var lvl = global::Grog.Kernel.Game.Instance?.DungeonMaster?.CurrentDungeonLevel;
+		var o = new List<string>();
+		o.Add("\"main\":" + (Term.MainView ? "true" : "false"));
+		o.Add("\"atCmd\":" + (Term.AtCmd ? "true" : "false"));
+		o.Add("\"click\":" + (Term.Clickable ? "true" : "false"));
+		o.Add("\"prompt\":" + J(Term.PromptRow));
+		o.Add("\"fg\":" + Term.Palette[(int)ConsoleColor.Black] + ",\"bg\":" + Term.Palette[(int)ConsoleColor.White]);
+		if (lvl != null && lvl.Grog != null)
+		{
+			var g = lvl.Grog;
+			o.Add("\"hero\":[" + g.X + "," + (g.Y + 2) + "],\"map\":[2," + lvl.Height + "]");
+			o.Add("\"status\":" + Arr(Array.ConvertAll(_status, J)));
+			var inv = new ItemSelectionList(g.Inventory.GetInventory(), useAssociatedItemCharacters: true);
+			var il = new List<string>();
+			foreach (Item it in inv) il.Add("[" + J(inv.CharacterAssociatedWith(it) + ") " + it.Description.TrimEnd()) + "," + (it.IsEquipped ? "true" : "false") + "]");
+			o.Add("\"inv\":" + Arr(il));
+			var vl = new List<string>();
+			foreach (var b in lvl.GetAllBeingsVisibleTo(g))
+				if (b != g) vl.Add(J(b.Character(lvl, b.X, b.Y) + " " + (string.IsNullOrEmpty(b.ChristenedName) ? "" : b.ChristenedName + " the ") + b.Type));
+			o.Add("\"vis\":" + Arr(vl));
+		}
+		if (_sentLog != LogSerial)
+		{
+			_sentLog = LogSerial;
+			o.Add("\"log\":" + Arr(MessageLog.ConvertAll(J)));
+		}
+		return "{" + string.Join(",", o) + "}";
+	}
+
+	static ConsoleKeyInfo ItemClick(int line, int[] itemPage, int[] itemLine, int page)
+	{
+		int hit = -1;
+		for (int i = 0; i < itemPage.Length; i++)
+			if (itemPage[i] == page && itemLine[i] <= line) hit = i;
+		if (hit < 0 || line < 0) return new ConsoleKeyInfo('\0', 0, false, false, false);
+		_itemCursor = hit;
+		return new ConsoleKeyInfo('\r', ConsoleKey.Enter, false, false, false);
 	}
 
 	static readonly ConsoleKeyInfo Esc = new ConsoleKeyInfo('\x1b', ConsoleKey.Escape, false, false, false);

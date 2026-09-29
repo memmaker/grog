@@ -402,7 +402,8 @@ internal static class Grog
 							try
 							{
 								AutoExploreAction.Note(currentDungeonLevel, player3);
-								consoleKeyInfo = Curses.Instance.ReadKey();
+								Term.AtCmd = true;
+								try { consoleKeyInfo = Curses.Instance.ReadKey(); } finally { Term.AtCmd = false; }
 								currentDungeonLevel.ClearMessages();
 								currentDungeonLevel.ResetAutoMore();
 								currentDungeonLevel.PrintMapAt(player3.X, player3.Y);

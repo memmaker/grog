@@ -18,9 +18,9 @@ function takeKey() {
 	return str;
 }
 const imports = {
-	present(view, cols, rows, cx, cy, vis) {
+	present(view, cols, rows, cx, cy, vis, info) {
 		const cells = view.slice();
-		postMessage({ t: 'screen', cells, cols, rows, cx, cy, vis }, [cells.buffer]);
+		postMessage({ t: 'screen', cells, cols, rows, cx, cy, vis, info }, [cells.buffer]);
 	},
 	keyAvailable() { return Atomics.load(ring, 0) !== Atomics.load(ring, 1); },
 	waitKey(ms) {

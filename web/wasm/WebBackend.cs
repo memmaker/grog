@@ -11,7 +11,7 @@ using System.Runtime.InteropServices.JavaScript;
 using Grog.Kernel.GCurses;
 namespace GrogWeb{
 	public partial class WebBackend : ITermBackend{
-		[JSImport("present","grog")] internal static partial void JsPresent([JSMarshalAs<JSType.MemoryView>] Span<int> cells,int cols,int rows,int cx,int cy,bool visible);
+		[JSImport("present","grog")] internal static partial void JsPresent([JSMarshalAs<JSType.MemoryView>] Span<int> cells,int cols,int rows,int cx,int cy,bool visible,string info);
 		[JSImport("waitKey","grog")] internal static partial string JsWaitKey(int timeout_ms);
 		[JSImport("keyAvailable","grog")] internal static partial bool JsKeyAvailable();
 		[JSImport("sleep","grog")] internal static partial void JsSleep(int ms);
@@ -67,13 +67,14 @@ namespace GrogWeb{
 		}
 		public void Sleep(int ms){ JsSleep(ms); }
 		public void Beep(){ JsSound("beep"); }
-		public void Present(int[] cells,int cols,int rows,int cx,int cy,bool visible){ JsPresent(cells,cols,rows,cx,cy,visible); }
+		public void Present(int[] cells,int cols,int rows,int cx,int cy,bool visible){ JsPresent(cells,cols,rows,cx,cy,visible,Term.Info != null ? Term.Info() : ""); }
 	}
 	public static class WebMain{
 		public static void Main(string[] args){
 			var b = new WebBackend();
 			Term.Backend = b;
 			Term.DataRoot = WebBackend.Dir;
+			Term.Info = global::Grog.Dungeons.DungeonLevel.RvipInfo;
 			try{ global::Grog.Grog.Main(new string[0]); }
 			catch(Exception e){ Console.WriteLine("Grog crashed: " + e); throw; }
 			b.SyncFiles();

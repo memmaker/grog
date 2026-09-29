@@ -4,7 +4,7 @@
  * from the game's ConsoleColor palette in src/Grog.Kernel.GCurses/Term.cs).
  * This page only blits cells and forwards keys. Every file the game writes
  * (saves, options, defaults, high scores, ghosts, revenge monsters) is mirrored
- * to IndexedDB '/grog/files'. Stage 1: the whole screen in the Map window.
+ * to IndexedDB '/grog/files'. Stage 5: rvip-wm windows from the game's info (Term.Info).
  */
 const FONT = '"DejaVu Sans Mono", Menlo, Consolas, "Liberation Mono", monospace';
 const DB = '/grog/files';
@@ -13,9 +13,18 @@ const $ = id => document.getElementById(id);
 const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
 
 let worker, ring, db, ended = false, wm = null, L = { px: 16, wm: null }, saveT = 0;
-const app = RvipApp({ name: 'grog', save: () => null, read: () => null, clear: () => {}, put: () => {} });
-let scr = null, COLS = 80, ROWS = 26, cur = { x: 0, y: 0, vis: false }, dirty = true, ctx;
-
+const isGame = k => !k.startsWith('web-');
+async function gameFiles() { return Object.keys(await allFiles()).filter(isGame); }
+/* Export / Import / New game (rvip-app.js): every game file in one bundle */
+const app = RvipApp({
+	name: 'grog',
+	save: async () => { const f = await gameFiles(); return f.length ? f : null; },
+	read: name => getFile(name),
+	clear: async () => { for (const f of await gameFiles()) await delFile(f); },
+	put: (f, data) => putFile(f.name || f, data),
+	noSave: 'No game files yet. Save first (Q).'
+});
+let scr = null, COLS = 80, ROWS = 26, cur = { x: 0, y: 0, vis: false }, dirty = true, ctx, info = {}, rects = {}, cellH = 16;
 /* ---------- cross-origin isolation (SharedArrayBuffer) ---------- */
 async function isolate() {
 	if (window.crossOriginIsolated) return true;
@@ -69,43 +78,99 @@ function sendKey(code, key, mods) {
 }
 function onKey(e) {
 	if (!app.running) return;
+	if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
 	if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'NumLock', 'Dead'].includes(e.key)) return;
 	if (e.metaKey || ['F5', 'F11', 'F12'].includes(e.code)) return;
 	e.preventDefault();
 	sendKey(e.code, e.key, (e.shiftKey ? 's' : '') + (e.ctrlKey ? 'c' : '') + (e.altKey ? 'a' : ''));
 }
 
-/* ---------- drawing: cell size from the Map window's A-/A+, never from the window size ---------- */
+/* ---------- drawing ----------
+ * The game (Term.Info, DungeonLevel.RvipInfo) sends: main (the map screen is up), hero [x,row],
+ * map [first row, rows], status lines, inv [[text, equipped]], vis [names], log, prompt, fg/bg.
+ * Multi-window: map rows on the canvas, the rest in text windows; a whole-screen view
+ * (lists, menus, help) as HTML text over the windows. One window: the whole screen on the canvas.
+ * Cell size only from the Map window's A-/A+ (L.px), never from the window size. */
 const hex = v => '#' + (v & 0xffffff).toString(16).padStart(6, '0');
+const one = () => wm && wm.mode() === 'single';
 function draw() {
 	requestAnimationFrame(draw);
 	if (!dirty || !scr || !wm) return;
 	dirty = false;
-	const p = L.px, c = $('map').querySelector('canvas');
+	const p = L.px, c = $('map').querySelector('canvas'), full = $('full');
+	const whole = one() || !info.main || !info.map;
+	full.hidden = one() || !!info.main;
+	full.classList.toggle('click', !!info.click);
+	if (!full.hidden) fullText(full.firstElementChild, p);
+	const r0 = whole ? 0 : info.map[0], R = whole ? ROWS : info.map[1];
 	ctx.font = p + 'px ' + FONT;
-	const w = Math.ceil(ctx.measureText('M').width), h = Math.ceil(p * 1.2);
-	if (c.width !== Math.round(COLS * w * dpr) || c.height !== Math.round(ROWS * h * dpr)) { c.width = Math.round(COLS * w * dpr); c.height = Math.round(ROWS * h * dpr); }
-	c.style.width = COLS * w + 'px'; c.style.height = ROWS * h + 'px';
+	const w = Math.ceil(ctx.measureText('M').width), h = cellH = Math.ceil(p * 1.2);
+	if (c.width !== Math.round(COLS * w * dpr) || c.height !== Math.round(R * h * dpr)) { c.width = Math.round(COLS * w * dpr); c.height = Math.round(R * h * dpr); }
+	c.style.width = COLS * w + 'px'; c.style.height = R * h + 'px';
 	const g = c.getContext('2d');
 	g.setTransform(dpr, 0, 0, dpr, 0, 0); g.font = p + 'px ' + FONT; g.textBaseline = 'middle'; g.textAlign = 'center';
-	for (let r = 0; r < ROWS; r++) for (let k = 0; k < COLS; k++) {
-		const i = (r * COLS + k) * 3, x = k * w, y = r * h;
+	for (let r = 0; r < R; r++) for (let k = 0; k < COLS; k++) {
+		const i = ((r0 + r) * COLS + k) * 3, x = k * w, y = r * h;
 		g.fillStyle = hex(scr[i + 2]); g.fillRect(x, y, w, h);
 		if (scr[i] > 32) { g.fillStyle = hex(scr[i + 1]); g.fillText(String.fromCharCode(scr[i]), x + w / 2, y + h / 2 + 1); }
 	}
-	if (cur.vis) { g.fillStyle = hex(scr[(cur.y * COLS + cur.x) * 3 + 1]); g.fillRect(cur.x * w, cur.y * h + h - 3, w, 2); }
-	RvipWM.center(c, 0, 0, COLS * w, ROWS * h);
+	const cy = cur.y - r0;
+	if (cur.vis && cy >= 0 && cy < R) { g.fillStyle = hex(scr[(cur.y * COLS + cur.x) * 3 + 1]); g.fillRect(cur.x * w, cy * h + h - 3, w, 2); }
+	if (info.hero && (info.main || !whole)) RvipWM.center(c, (info.hero[0] + 0.5) * w, (info.hero[1] - r0 + 0.5) * h, COLS * w, R * h);
+	else RvipWM.center(c, 0, 0, COLS * w, R * h);
+	c._r0 = r0;
+}
+/* the whole screen as HTML text (runs of one colour pair) */
+function fullText(pre, p) {
+	pre.style.fontSize = p + 'px'; pre.style.lineHeight = Math.ceil(p * 1.2) + 'px';
+	let html = '';
+	for (let r = 0; r < ROWS; r++) {
+		let k = 0;
+		while (k < COLS) {
+			const i = (r * COLS + k) * 3, fg = scr[i + 1], bg = scr[i + 2];
+			let t = '';
+			while (k < COLS) { const j = (r * COLS + k) * 3; if (scr[j + 1] !== fg || scr[j + 2] !== bg) break; const ch = scr[j]; t += ch < 32 ? ' ' : String.fromCharCode(ch); k++; }
+			html += '<span style="color:' + hex(fg) + ';background:' + hex(bg) + '">' + t.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>';
+		}
+		html += '\n';
+	}
+	pre.innerHTML = html;
+}
+/* mouse: a click on a row of a menu or item list sends that row; the game picks the entry */
+function clickRow(e, el, r0) {
+	if (!info.click || !app.running) return;
+	const b = el.getBoundingClientRect(), row = Math.floor((e.clientY - b.top) / cellH) + r0;
+	if (row >= 0 && row < ROWS) sendKey('RvipRow', String(row), '');
+}
+function update(i) {
+	RvipWM.prompt.text(i.main && !one() ? i.prompt || '' : '');
+	RvipWM.prompt.wait(i.atCmd);
+	if (i.fg !== undefined) ['msgb', 'stat', 'inv', 'vis', 'full'].forEach(id => { $(id).style.color = hex(i.fg); $(id).style.background = hex(i.bg); });
+	if (i.log) RvipWM.setLog($('log'), i.log);
+	if (i.status) { const t = i.status.join('\n'); if ($('stat').textContent !== t) $('stat').textContent = t; }
+	if (i.inv) {
+		const el = $('inv'), k = JSON.stringify(i.inv);
+		if (el._k !== k) {
+			el._k = k; el.textContent = '';
+			if (!i.inv.length) { const d = document.createElement('div'); d.className = 'wm-vh'; d.textContent = 'empty'; el.appendChild(d); }
+			i.inv.forEach(([t, eq]) => { const d = document.createElement('div'); d.textContent = t; if (eq) d.className = 'inv-eq'; el.appendChild(d); });
+		}
+	}
+	if (i.vis) RvipWM.visible($('vis'), i.vis.map(v => 'M' + v).join('\n'));
 }
 function saveLayout() { clearTimeout(saveT); saveT = setTimeout(() => putFile('web-layout.json', new TextEncoder().encode(JSON.stringify(L))), 300); }
 async function makeWM() {
 	try { const d = await getFile('web-layout.json'); if (d) { const s = JSON.parse(new TextDecoder().decode(d)); L = { px: s.px >= 8 && s.px <= 48 ? s.px : 16, wm: s.wm }; } } catch (_) { }
 	wm = RvipWM({
 		area: $('game'), menu: $('btn-layout'),
-		wins: [{ id: 'map', title: 'Map' }],
-		multi: 'map', single: 'map', state: L.wm,
+		wins: [{ id: 'map', title: 'Map' }, { id: 'msg', title: 'Messages' }, { id: 'stat', title: 'Status' },
+			{ id: 'inv', title: 'Inventory' }, { id: 'vis', title: 'Visible' }],
+		multi: { d: 'h', r: 0.7, a: { d: 'v', r: 0.8, a: 'map', b: 'stat' }, b: { d: 'v', r: 0.4, a: 'msg', b: { d: 'v', r: 0.6, a: 'inv', b: 'vis' } } },
+		single: 'map', state: L.wm,
 		save: st => { L.wm = st; saveLayout(); },
-		layout: () => { dirty = true; },
+		layout: r => { rects = r; dirty = true; update(info); },
 		zoom: { map: (p, d) => { L.px = Math.max(8, Math.min(48, L.px + d)); saveLayout(); dirty = true; } },
+		size: { map: () => L.px },
 		onReset: () => { L.px = 16; L.wm = wm.state(); saveLayout(); dirty = true; }
 	});
 	wm.apply();
@@ -117,6 +182,7 @@ function onMessage(e) {
 	switch (m.t) {
 	case 'screen':
 		scr = m.cells; COLS = m.cols; ROWS = m.rows; cur = { x: m.cx, y: m.cy, vis: m.vis }; dirty = true;
+		if (m.info) { try { info = JSON.parse(m.info); update(info); } catch (err) { console.error('info', err); } }
 		if (!app.running && !ended) { app.running = true; app.status(''); $('game').hidden = false; wm.apply(); }
 		break;
 	case 'store': putFile(m.name, m.data); break;
@@ -130,11 +196,16 @@ window.grog = {
 	text() { if (!scr) return ''; let s = ''; for (let r = 0; r < ROWS; r++) { for (let c = 0; c < COLS; c++) { const k = scr[(r * COLS + c) * 3]; s += k < 32 ? ' ' : String.fromCharCode(k); } s += '\n'; } return s; },
 	key: sendKey,
 	get running() { return app.running; },
+	get info() { return info; },
 };
 
 async function main() {
 	ctx = document.createElement('canvas').getContext('2d');
 	$('btn-restart').onclick = () => location.reload();
+	RvipWM.dropdown($('btn-file'), $('menu-file'));
+	document.querySelectorAll('#bar button').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
+	$('full').addEventListener('click', e => clickRow(e, $('full').firstElementChild, 0));
+	$('map').addEventListener('click', e => { const c = $('map').querySelector('canvas'); clickRow(e, c, c._r0 || 0); });
 	if (!await isolate()) { app.status('This browser cannot run the game here (no cross-origin isolation / SharedArrayBuffer).', true); return; }
 	db = await openDB();
 	await makeWM();
@@ -145,6 +216,8 @@ async function main() {
 	worker.onerror = e => app.crashed(e);
 	worker.postMessage({ t: 'init', ring: ring.buffer, files });
 	window.addEventListener('keydown', onKey);
+	window.addEventListener('resize', () => { wm.apply(); dirty = true; });
+	window.addEventListener('beforeunload', e => { if (app.running) { e.preventDefault(); e.returnValue = ''; } });
 	requestAnimationFrame(draw);
 }
 main();

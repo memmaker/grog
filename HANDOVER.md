@@ -112,3 +112,29 @@ may revisit tunnel ends once); stage 1 open items unchanged.
 list reopens (it is in `MessageLog`). Next: stage 4 (tiles).
 
 - Stage 4 (tiles) skipped: the user chose text only (Grog is a monochrome console game, no own tiles).
+
+### Stage 5 — Web page (done)
+
+- **Live:** https://ruzzoli.de/roguelikes/grog/ (GitHub memmaker/grog, remote `memmaker`).
+  Deploy: `sh web/build.sh && sh web/deploy.sh` (guard: clean tree, pushed HEAD).
+- **Windows** (rvip-wm): Map (canvas, screen rows 2..23, hero centred), Messages
+  (`DungeonLevel.MessageLog`), Status (the two status lines), Inventory (one list, equipped
+  bold), Visible (monsters from `GetAllBeingsVisibleTo`). One window = the whole 80x26 screen on
+  the map canvas. Prompt line = screen row 0 over the map (multi only). Layout in IndexedDB
+  `/grog/files` `web-layout.json`.
+- **Game → page:** `Term.Info` (set in `WebMain`) = `DungeonLevel.RvipInfo()` JSON with every
+  present: `main` (map screen up: set in `Render`, cleared by `Curses.Clear`, `Popup.Choose`,
+  item lists), `atCmd` (`Grog.cs` command ReadKey), `click`, `prompt` (row 0), `hero`, `map`,
+  `status`, `inv`, `vis`, `log` (only when changed). Whole-screen views (menus, lists, help,
+  death) show as HTML text (`#full pre`) over the windows.
+- **Mouse:** a click on a row of the Enter menu / item menus / item lists sends key
+  `RvipRow` (→ `ConsoleKey.F24`, KeyChar 0xE000+row); `Popup.Choose` and
+  `ProcessItemSelectionList` (`ItemClick`) map it to the entry.
+- **Help** button: `web/make-help.py` (game's HelpText + browser notes) → `dist/help.html`.
+  File ▾: Export / Import (all game files in one bundle) / New game (rvip-app.js).
+
+**Open:** untrimmed 23 MB (BinaryFormatter + trimming, not retried); no autosave from the page
+(Grog saves only with Q = save & quit; the crash autosave slot 42 exists); no Docs page entry
+(step 6); the status HP bar (inverse part) is not shown in the Status window; single-window
+mode shows the whole screen without hero centring when it fits.
+

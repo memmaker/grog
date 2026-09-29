@@ -12,4 +12,5 @@ dotnet publish web/wasm/GrogWeb.csproj -c Release -nologo -v q | grep -v "^$" ||
 mkdir -p "$OUT"
 cp -r "$PUB/_framework" "$OUT/_framework"
 cp web/index.html web/grog.js web/worker.js web/coi-sw.js "$OUT/"
+python3 web/make-help.py > "$OUT/help.html"
 du -sh "$OUT"

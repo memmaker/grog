@@ -159,6 +159,7 @@ public partial class DungeonLevel
 			}
 		}
 		string status = GetStatus();
+		_status = new[] { text.TrimEnd(), status.Replace("|||", "").TrimEnd() }; // RVIP 5: Status window
 		Curses.Instance.SetCursorPosition(0, Curses.Instance.WindowHeight - 1);
 		if (status.Length > 0)
 		{
@@ -177,6 +178,7 @@ public partial class DungeonLevel
 			}
 		}
 		Curses.Instance.ClearToEndOfLine();
+		Term.MainView = true; Term.Clickable = false; // RVIP 5: map screen
 		while (true)
 		{
 			Curses.Instance.SetCursorPosition(0, 0);
@@ -1566,6 +1568,7 @@ public partial class DungeonLevel
 			}
 			Render();
 			ClearMessages();
+			Term.MainView = false; Term.Clickable = true; // RVIP 5: list over the map -> whole screen, rows clickable
 			List<string> list7 = new List<string>();
 			for (int j = 0; j < list2.Count; j++)
 			{
@@ -1662,6 +1665,7 @@ public partial class DungeonLevel
 				Curses.Instance.SetCursorPosition(Math.Min(Curses.Instance.WindowWidth - 1, Curses.Instance.WindowWidth - num6 + 14 + ((num3 > 1) ? 16 : 0)), list8.Count + list2.Count + ((headline != null) ? 1 : 0));
 			}
 			ConsoleKeyInfo consoleKeyInfo = Curses.Instance.ReadKey(showReadKey: false, printChoice);
+			if (consoleKeyInfo.Key == ConsoleKey.F24) consoleKeyInfo = ItemClick(consoleKeyInfo.KeyChar - 0xE000 - ((headline != null) ? 1 : 0), itemPage, itemLine, num2); // RVIP 5: mouse
 			c = consoleKeyInfo.KeyChar;
 			flag = (consoleKeyInfo.Modifiers & ConsoleModifiers.Control) != 0 || consoleKeyInfo.Modifiers.HasFlag(ConsoleModifiers.Control);
 			if (flag && consoleKeyInfo.Key >= ConsoleKey.A && consoleKeyInfo.Key <= ConsoleKey.Z)

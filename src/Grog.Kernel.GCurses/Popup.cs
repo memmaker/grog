@@ -55,7 +55,14 @@ public static class Popup
 			}
 			Line(x0, y0 + 2 + rows, "+" + new string('-', w - 2) + "+");
 			c.SetCursorPosition(x0 + 2, y0 + 2 + cursor - top);
+			Term.MainView = false; Term.Clickable = true; // RVIP 5: whole screen, rows clickable
 			ConsoleKeyInfo k = c.ReadKey(showReadKey: false, showCursor: false);
+			if (k.Key == ConsoleKey.F24) // RVIP 5: mouse click on screen row
+			{
+				int n = top + (k.KeyChar - 0xE000) - (y0 + 2);
+				if (n >= 0 && n < entries.Count && n < top + rows && entries[n].Matches != null) return n;
+				continue;
+			}
 			switch (k.Key)
 			{
 			case ConsoleKey.UpArrow: case ConsoleKey.NumPad8: cursor = Next(entries, cursor, -1); continue;

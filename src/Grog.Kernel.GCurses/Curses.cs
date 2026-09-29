@@ -132,6 +132,7 @@ public class Curses
 
 	public void Clear()
 	{
+		Term.MainView = false; Term.Clickable = false; // RVIP 5: a whole-screen view
 		for (int i = 0; i < WindowWidth; i++)
 		{
 			for (int j = 0; j < WindowHeight; j++)
