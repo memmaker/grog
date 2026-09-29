@@ -110,3 +110,5 @@ may revisit tunnel ends once); stage 1 open items unchanged.
 
 **Open:** no mouse in menus yet (stage 5 page); the message of an action is not visible when the
 list reopens (it is in `MessageLog`). Next: stage 4 (tiles).
+
+- Stage 4 (tiles) skipped: the user chose text only (Grog is a monochrome console game, no own tiles).
