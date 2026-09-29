@@ -21,7 +21,7 @@ const app = RvipApp({
 	save: async () => { const f = await gameFiles(); return f.length ? f : null; },
 	read: name => getFile(name),
 	clear: async () => { for (const f of await gameFiles()) await delFile(f); },
-	put: (f, data) => putFile(f.name || f, data),
+	put: (f, data) => putFile(f.name || f, data).then(() => {}), // a string result = refuse (rvip-app)
 	noSave: 'No game files yet. Save first (Q).'
 });
 let scr = null, COLS = 80, ROWS = 26, cur = { x: 0, y: 0, vis: false }, dirty = true, ctx, info = {}, rects = {}, cellH = 16;

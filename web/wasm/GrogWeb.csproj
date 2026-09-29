@@ -14,7 +14,7 @@
     <StartupObject>GrogWeb.WebMain</StartupObject>
     <InvariantGlobalization>true</InvariantGlobalization>
     <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
-    <PublishTrimmed>false</PublishTrimmed>
+    <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>
     <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
     <WasmEnableThreads>false</WasmEnableThreads>
@@ -28,5 +28,7 @@
     <!-- saves are BinaryFormatter graphs of game types: keep the game assembly whole -->
     <TrimmerRootAssembly Include="GrogWeb" />
     <TrimmerRootAssembly Include="System.Runtime.Serialization.Formatters" />
+    <!-- BinaryFormatter Converter..cctor does Assembly.Load("mscorlib") -->
+    <TrimmerRootAssembly Include="mscorlib" />
   </ItemGroup>
 </Project>
