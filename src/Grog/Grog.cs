@@ -646,6 +646,14 @@ internal static class Grog
 				}
 				Game.Instance.HighscoreManager.IncreaseFailedPlayerCount();
 			}
+			{ //RVIP 12: graveyard/leaderboard report (death, win = left the dungeon immortal, quit/fled)
+				string ev = !player3.IsAlive ? "death" : (player3.HasLeftDungeon && player3.HasGainedImmortality) ? "win" : "quit";
+				string killer = ev == "death" ? Player.RvipKiller : null;
+				if (killer != null) { if (killer.StartsWith("by ")) killer = killer.Substring(3); foreach (string a in new[] { "a ", "an ", "the " }) if (killer.StartsWith(a)) { killer = killer.Substring(a.Length); break; } }
+				long score = 0; try { score = Game.Instance.HighscoreManager.GetScoreFor(player3) - player3.InitialScore; } catch { }
+				Term.Beacon(ev, string.IsNullOrEmpty(player3.ChristenedName) ? null : player3.ChristenedName, killer, Game.Instance.DungeonMaster.CurrentDungeonLevel.Level, score, player3.Moves, player3.Level);
+				Player.RvipKiller = null;
+			}
 			Game.Instance.Ghosts.StoreActiveGhostsForLater();
 			Game.Instance.RevengeSystem.StoreActiveRevengeMonstersForLater();
 			if (player3.DidCheat)

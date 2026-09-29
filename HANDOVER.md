@@ -177,3 +177,24 @@ mode shows the whole screen without hero centring when it fits.
 - Cheats: `CheatMode.cs` (Ctrl+x) opens only for a male "Brannalbin" of type "wizard";
   kept in our build; cheated runs get no high score.
 - No walkthrough found. Next: stage 9 (graveyard + leaderboard).
+
+### Stage 9 — Graveyard + leaderboard (done)
+
+- Hook: `src/Grog/Grog.cs`, end of the run in the not-saved branch (before ghosts/revenge monsters
+  are stored) → `Term.Beacon` (`Term.cs`, builds + URL-encodes the query, `Term.BeaconOut`) →
+  `WebBackend.JsBeacon` → worker `beacon` postMessage → `web/grog.js` `RvipWM.report`.
+- ev: death = `!IsAlive`; win = alive + `HasLeftDungeon` + `HasGainedImmortality` (up the level-1
+  stairs after the throne); quit = Ctrl+Q or fleeing up the level-1 stairs mortal. Save & quit sends nothing.
+- Fields: g, ev, name (ChristenedName), killer (death only; `Player.RvipKiller` set in
+  `GetKillerName`: "<christened> the <type>" or type, so revenge monsters keep their name,
+  never the dark-room "something"; non-monster deaths send the game's cause, e.g. "starvation"),
+  depth (current level), score (`HighscoreManager.GetScoreFor − InitialScore`, as the list),
+  turns (Moves), lvl. Nothing missing. Cheated runs are reported too.
+- Tests: headless (`Headless.cs` prints `BEACON …`; `IMMORTAL=1` env for the win path):
+  `IMMORTAL=1 NOMON=1 KEYS="<Esc>g×40<y/" + Esc/space` → ev=win; deaths with killers
+  "Baulnali the zombie" (revenge), "kobold", "starvation". Browser (local): Ctrl+Q quit → beacon
+  URL; outbox 503 keeps it, 204 + `RvipWM.flush()` empties it. `web/coi-sw.js` already had the null-body fix.
+- Headless needs `export PATH="$HOME/.dotnet:$PATH" DOTNET_ROOT="$HOME/.dotnet"` (exit 127 = no dotnet on PATH).
+- Killer art: `roguelikes-index/killers/grog/` (53, glyph black on white in Menlo, `make.py grog`).
+- Open: upstream score formula subtracts for a fast immortal exit (`(Moves − 15000) * 50` when
+  Moves < 15000) → a quick win can score negative; sent as the game computes it.

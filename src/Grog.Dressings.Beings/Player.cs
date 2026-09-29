@@ -810,7 +810,7 @@ public class Player : Being
 		{
 			if (attacker == null)
 			{
-				Game.Instance.DeathCause = deathCause;
+				Game.Instance.DeathCause = deathCause; RvipKiller = deathCause; //RVIP 12
 			}
 			else
 			{
@@ -820,8 +820,11 @@ public class Player : Being
 		}
 	}
 
+	public static string RvipKiller; //RVIP 12: killer as stored (ChristenedName + Type, never the dark-room "something")
+
 	private string GetKillerName(Being attacker)
 	{
+		RvipKiller = string.IsNullOrEmpty(attacker.ChristenedName) ? attacker.Type : (attacker.ChristenedName + " the " + attacker.Type);
 		string text = "by " + attacker.Name;
 		if (string.IsNullOrEmpty(attacker.ChristenedName))
 		{

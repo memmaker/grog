@@ -55,6 +55,22 @@ public static class Term
 	// RVIP 6b: named sound effects for the page (hit hurt death pickup stairs levelup beep)
 	public static Action<string> SoundOut;
 	public static void Sound(string name) { SoundOut?.Invoke(name); }
+	public static Action<string> BeaconOut; // RVIP 12: finished run report (query string) -> page RvipWM.report
+	public static void Beacon(string ev, string name, string killer, int depth, long score, long turns, int lvl)
+	{
+		try
+		{
+			string E(string v) => Uri.EscapeDataString(v);
+			string q = "g=grog&ev=" + ev;
+			if (!string.IsNullOrEmpty(name)) q += "&name=" + E(name);
+			if (!string.IsNullOrEmpty(killer)) q += "&killer=" + E(killer);
+			q += "&depth=" + depth + "&score=" + score + "&turns=" + turns + "&lvl=" + lvl;
+			LastBeacon = q;
+			BeaconOut?.Invoke(q);
+		}
+		catch { }
+	}
+	public static string LastBeacon;
 	public static bool MainView, AtCmd, Clickable;
 	public static string PromptRow = "";
 

@@ -185,6 +185,9 @@ function onMessage(e) {
 		if (m.info) { try { info = JSON.parse(m.info); update(info); } catch (err) { console.error('info', err); } }
 		if (!app.running && !ended) { app.running = true; app.status(''); $('game').hidden = false; wm.apply(); }
 		break;
+	case 'beacon': // RVIP 12: the game builds the report, the page only sends it
+		if (window.RvipWM && RvipWM.report) RvipWM.report(m.q); else fetch('/roguelikes/beacon?' + m.q, { keepalive: true, mode: 'no-cors' }).catch(function () {});
+		break;
 	case 'sound': if (L.sound) RVIPSound.play([m.name], 0.6); break;
 	case 'store': putFile(m.name, m.data); break;
 	case 'delete': delFile(m.name); break;

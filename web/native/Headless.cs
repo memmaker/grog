@@ -27,6 +27,7 @@ namespace GrogHeadless{
 		static readonly string[] specials = {"ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Numpad1","Numpad2","Numpad3","Numpad4","Numpad5","Numpad6","Numpad7","Numpad8","Numpad9","Home","End","PageUp","PageDown","Backspace"};
 		public bool KeyAvailable(){ return false; }
 		public ConsoleKeyInfo ReadKey(){
+			if(Environment.GetEnvironmentVariable("IMMORTAL") != null && global::Grog.Kernel.Game.Instance?.Grog != null) global::Grog.Kernel.Game.Instance.Grog.HasGainedImmortality = true; //RVIP 12 win-path test: then climb the level-1 up stairs
 			if(Environment.GetEnvironmentVariable("NOMON") != null){ //scripted tests: no monsters on the level
 				var lv = global::Grog.Kernel.Game.Instance?.DungeonMaster?.CurrentDungeonLevel;
 				if(lv != null && lv.Grog != null) foreach(var t in new System.Collections.Generic.List<global::Grog.Dressings.Thing>(lv.Things)) if(t is global::Grog.Dressings.Beings.Being && t != lv.Grog && t.X >= 0) lv.RemoveThing(t.X, t.Y);
@@ -64,6 +65,7 @@ namespace GrogHeadless{
 			bool save = args.Length > 2 && args[2] == "save";
 			var h = new Headless(seed,keys,save);
 			Term.Backend = h;
+			Term.BeaconOut = q => Console.WriteLine("BEACON " + q); //RVIP 12
 			Term.DataRoot = Directory.GetCurrentDirectory();
 			H = h; Seed = seed; Loaded = File.Exists("grog42_v1.sg");
 			h.Script(Loaded ? " " : "\r\r\r\r"); h.Script(Environment.GetEnvironmentVariable("KEYS") ?? ""); //KEYS: scripted test keys

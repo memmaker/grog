@@ -21,6 +21,7 @@ namespace GrogWeb{
 		[JSImport("initialFile","grog")] internal static partial byte[] JsInitialFile(string name);
 		[JSImport("quit","grog")] internal static partial void JsQuit();
 		[JSImport("sound","grog")] internal static partial void JsSound(string name);
+		[JSImport("beacon","grog")] internal static partial void JsBeacon(string query); //RVIP 12
 
 		public const string Dir = "/grog";
 		Dictionary<string,long> stamps = new Dictionary<string,long>();
@@ -77,6 +78,7 @@ namespace GrogWeb{
 			Term.DataRoot = WebBackend.Dir;
 			Term.Info = global::Grog.Dungeons.DungeonLevel.RvipInfo;
 			Term.SoundOut = WebBackend.JsSoundStatic;
+			Term.BeaconOut = WebBackend.JsBeacon;
 			try{ global::Grog.Grog.Main(new string[0]); }
 			catch(Exception e){ Console.WriteLine("Grog crashed: " + e); throw; }
 			b.SyncFiles();
