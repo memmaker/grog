@@ -52,7 +52,7 @@
 	#msgb { font: 13px/1.4 ui-monospace, Menlo, monospace; }   /* A−/A+ sets its font-size */
 	#log { overflow-y: auto; padding: 4px 8px; font: inherit; white-space: pre-wrap; }
 	#log div + div { border-top: 1px solid var(--line); }
-	#full { position: absolute; inset: 0; z-index: 3; background: #000; }
+	#full { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 95%; max-height: 95%; z-index: 3; background: #000; border: 1px solid #888; box-shadow: 0 0 24px #000; }
 	#full[hidden] { display: none; }
 	#overlay, #help { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: flex;
 		align-items: center; justify-content: center; z-index: 10; }

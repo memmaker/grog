@@ -102,6 +102,7 @@ function draw() {
 	full.hidden = one() || !!info.main;
 	full.classList.toggle('click', !!info.click);
 	if (!full.hidden) fullText(full.firstElementChild);
+	if (!info.main && !one()) return; // multi: menu is the #full overlay; keep the last map frame
 	const r0 = whole ? 0 : info.map[0], R = whole ? ROWS : info.map[1];
 	ctx.font = p + 'px ' + face;
 	const w = Math.ceil(ctx.measureText('M').width), h = cellH = Math.ceil(p * 1.2);
@@ -124,8 +125,9 @@ function draw() {
 function fullText(pre) {
 	const p = RvipWM.fontSize('msg');
 	pre.style.fontSize = p + 'px'; pre.style.lineHeight = Math.ceil(p * 1.2) + 'px';
-	let html = '';
-	for (let r = 0; r < ROWS; r++) {
+	let html = '', rows = ROWS;
+	while (rows > 1 && [...Array(COLS)].every((_, k) => scr[((rows - 1) * COLS + k) * 3] <= 32)) rows--;
+	for (let r = 0; r < rows; r++) {
 		let k = 0;
 		while (k < COLS) {
 			const i = (r * COLS + k) * 3, fg = scr[i + 1], bg = scr[i + 2];
