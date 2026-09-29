@@ -161,6 +161,7 @@ internal static class Grog
 	}
 
 	static int _rvipSavedMoves = -1;
+	static object _rvipSavedLevel;
 
 	private static bool Play()
 	{
@@ -411,7 +412,7 @@ internal static class Grog
 							try
 							{
 								// RVIP: autosave (slot 42, the game's own crash save) at the prompt with no keys pending; the loop end deletes it
-								if (Term.Backend != null && player3.AutomaticAction == null && player3.Moves != _rvipSavedMoves && !Term.KeyAvailable) { _rvipSavedMoves = player3.Moves; Game.Save(42); }
+								if (Term.Backend != null && player3.AutomaticAction == null && (player3.Moves != _rvipSavedMoves || currentDungeonLevel != _rvipSavedLevel) && !Term.KeyAvailable) { _rvipSavedMoves = player3.Moves; _rvipSavedLevel = currentDungeonLevel; Game.Save(42); }
 								AutoExploreAction.Note(currentDungeonLevel, player3);
 								Term.AtCmd = true;
 								try { consoleKeyInfo = Curses.Instance.ReadKey(); } finally { Term.AtCmd = false; }

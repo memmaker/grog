@@ -21,9 +21,6 @@ Quick reference:
 - Headless: `sh web/native/run-seeds.sh [first] [count] [keys]`; `KEYS=`, `NOMON=1`, `IMMORTAL=1`, `CELLS=`.
 
 Open problems:
-- Autosave after taking stairs: a reload right after `>` resumed on the old level (D:1 instead of D:2).
-  Autosave (`Game.Save(42)` before the command `ReadKey` in `src/Grog/Grog.cs`) seems to skip until the next
-  move counter change. Not investigated.
 - Grog's own score formula gives fast wins a negative score (`(Moves − 15000) * 50` when Moves < 15000);
   beacon sends it unchanged. Ask the user before changing.
 - Card/tree year is 2023 (1.0.2 release), not 2018 (begun); user not yet asked to confirm.
@@ -221,6 +218,9 @@ mode shows the whole screen without hero centring when it fits.
 - Killer art: `roguelikes-index/killers/grog/` (53, glyph black on white in Menlo, `make.py grog`).
 - Open: upstream score formula subtracts for a fast immortal exit (`(Moves − 15000) * 50` when
   Moves < 15000) → a quick win can score negative; sent as the game computes it.
+
+- Autosave after stairs fixed: the guard is `Moves` changed **or** the level changed (stairs cost no move).
+  Test: headless `KEYS=<Esc>g×40>×12 NOMON=1 DUMP=1 GrogNative 4 0`, then run again (loads grog42) → same D:.
 
 ### RVIP finetuning (done; merged into main 6901f10, deployed)
 
