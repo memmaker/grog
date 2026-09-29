@@ -159,7 +159,8 @@ public partial class DungeonLevel
 			}
 		}
 		string status = GetStatus();
-		_status = new[] { text.TrimEnd(), status.Replace("|||", "").TrimEnd() }; // RVIP 5: Status window
+		string st2 = status.Replace("|||", "").TrimEnd(); // RVIP 5: Status window (no empty bottom line)
+		_status = st2.Length > 0 ? new[] { text.TrimEnd(), st2 } : new[] { text.TrimEnd() };
 		Curses.Instance.SetCursorPosition(0, Curses.Instance.WindowHeight - 1);
 		if (status.Length > 0)
 		{
