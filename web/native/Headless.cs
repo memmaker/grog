@@ -17,6 +17,8 @@ namespace GrogHeadless{
 		public static ConsoleKeyInfo K(char ch){
 			ConsoleKeyInfo k;
 			if(ch == '\r') Term.FromBrowser("Enter","Enter",false,false,false,out k);
+			else if(ch >= '\u2190' && ch <= '\u2193') Term.FromBrowser(new[]{"ArrowLeft","ArrowUp","ArrowRight","ArrowDown"}[ch - '\u2190'],"",false,false,false,out k); //KEYS: arrows as \u2190-\u2193
+			else if(ch >= '\u2460' && ch <= '\u2468') Term.FromBrowser("Numpad" + (ch - '\u2460' + 1),"",false,false,false,out k); //KEYS: numpad 1-9 as circled digits
 			else if(ch == '\x1b') Term.FromBrowser("Escape","Escape",false,false,false,out k);
 			else Term.FromBrowser("",ch.ToString(),false,false,false,out k);
 			return k;

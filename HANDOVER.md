@@ -74,5 +74,39 @@ screen (panes/sub-windows are stage 5).
   corridors and doors; `<` walked back through corridor and room, stopped when a bat came into
   view. Note: the pane's `type` action sends no keydown; dispatch `KeyboardEvent` for `<` `>`.
 
-**Next:** stage 3 (Enter menu + inventory). Open: the "stood next to" part of the known grid
-is lost on save/load (explore may revisit tunnel ends once); stage 1 open items unchanged.
+Open from stage 2: the "stood next to" part of the known grid is lost on save/load (explore
+may revisit tunnel ends once); stage 1 open items unchanged.
+
+### Stage 3 — Enter menu + inventory (done)
+
+- **Files:** `src/Grog.Kernel.GCurses/Popup.cs` (`Popup.Choose(title, List<PopupEntry>, cursor)`:
+  game-drawn floating box, content-sized, centred, scrolls only past screen height; arrows /
+  numpad 8 2 move, Enter / 5 / 6 choose, Esc / 4 / 0 / . close, entry key chooses),
+  `src/Grog/CommandMenu.cs` (`CommandMenu.Show()`, every help command grouped Game / Movement /
+  Resting / Dungeon / Items / Information incl. `g` `<` `>`), `src/Grog.Dungeons/DungeonLevel.Rvip.cs`
+  (`ItemCursorKey`, `ProcessInventoryMain`, `InventoryItemMenu`, `AfterItemAction`, `Examine`,
+  `AutoMore`, `MessageLog`). `DungeonLevel` is now `partial`.
+- **Enter** at the command prompt = menu only (`Grog.cs`); interact is `r` (help text updated).
+  Chosen command runs through the **key queue**: `Term.Push(key)` (`Term.ReadKey` reads pushed keys
+  before the backend's).
+- **Item cursor** in the game's one item prompt `ProcessItemSelectionList` (inventory, use, zap,
+  throw, pick up): `>` marker, arrows / numpad 8 2, Enter / 5 chooses (= the item's letter),
+  Space pages when paged. Grog has one list (equipped items highlighted), so no list switching (4/6 no-op).
+- **Inventory (`i`/`e`)**: letter = main action (equip toggle, else use, else examine), Shift = drop,
+  Ctrl = use, numpad + / - / * = main / drop / examine, 0 or . close; Enter / Space / 5 = item menu
+  (u use, e equip, t throw, d drop, x/* examine). Item actions are **direct calls** of the game's
+  `ProcessUseKey` / `ProcessInventoryKey` / `ProcessThrowKey`. After an action that took a turn the
+  list closes (so monsters act) and `i` is pushed again unless a monster is in view. Any other key
+  is pushed and runs as a command.
+- **3d:** with a backend (`DungeonLevel.AutoMore`) `---more---` in the message line never waits
+  (`Render`, `ProcessMore`); every message goes into `DungeonLevel.MessageLog` (200) for the stage 5
+  message window. Paged screens (help, death `[Press '/']`, farewell) still wait.
+- Headless `KEYS`: `←↑→↓` (U+2190–2193) = arrows, `①`–`⑨` = numpad 1–9. Note the start script's
+  4th `\r` now opens the Enter menu: begin `KEYS` with Escape.
+
+- **Tested:** headless (`KEYS=$'\x1b\r↓↓'` menu; `$'\x1bi↓\re'` item menu → unequip → list
+  reopens; `-` drops; `m` in the list runs the monster list), 6 seeds × 5000 random keys + save/load
+  clean; web build: Enter menu and inventory + numpad 2/5 item menu in the browser pane.
+
+**Open:** no mouse in menus yet (stage 5 page); the message of an action is not visible when the
+list reopens (it is in `MessageLog`). Next: stage 4 (tiles).

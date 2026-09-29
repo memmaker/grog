@@ -40,8 +40,11 @@ public static class Term
 	public static ConsoleColor BackgroundColor { set { if (Backend == null) Console.BackgroundColor = value; } }
 	public static void SetWindowSize(int w, int h) { if (Backend == null) Console.SetWindowSize(w, h); }
 	public static void Clear() { if (Backend == null) Console.Clear(); }
-	public static bool KeyAvailable => Backend != null ? Backend.KeyAvailable() : Console.KeyAvailable;
-	public static ConsoleKeyInfo ReadKey() => Backend != null ? Backend.ReadKey() : Console.ReadKey(intercept: true);
+	// Keys queued by the game itself (Enter menu, inventory: "any other key is a normal command"); read before the player's keys.
+	static readonly System.Collections.Generic.Queue<ConsoleKeyInfo> pushed = new System.Collections.Generic.Queue<ConsoleKeyInfo>();
+	public static void Push(ConsoleKeyInfo k) => pushed.Enqueue(k);
+	public static bool KeyAvailable => pushed.Count > 0 || (Backend != null ? Backend.KeyAvailable() : Console.KeyAvailable);
+	public static ConsoleKeyInfo ReadKey() => pushed.Count > 0 ? pushed.Dequeue() : Backend != null ? Backend.ReadKey() : Console.ReadKey(intercept: true);
 	public static void Beep() { if (Backend != null) Backend.Beep(); else Console.Beep(); }
 	public static void Sleep(int ms) { if (Backend != null) Backend.Sleep(ms); else Thread.Sleep(ms); }
 	public static void WriteLine(string s) { if (Backend == null) Console.WriteLine(s); }

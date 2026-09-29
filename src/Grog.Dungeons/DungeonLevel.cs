@@ -20,7 +20,7 @@ using Grog.Systems.Traps;
 namespace Grog.Dungeons;
 
 [Serializable]
-public class DungeonLevel
+public partial class DungeonLevel
 {
 	public readonly int Level;
 
@@ -196,7 +196,7 @@ public class DungeonLevel
 			{
 				break;
 			}
-			if (_isAutoMoreActive)
+			if (_isAutoMoreActive || (AutoMore && moreKey == ' ')) // RVIP 3d: no --more-- stops in the web build
 			{
 				_message = null;
 				more = false;
@@ -723,7 +723,7 @@ public class DungeonLevel
 
 	private void ProcessMore(string moreMessage)
 	{
-		if (!_isAutoMoreActive)
+		if (!_isAutoMoreActive && !AutoMore)
 		{
 			Curses.Instance.InvertColors();
 			Curses.Instance.Write(moreMessage);
@@ -1020,6 +1020,7 @@ public class DungeonLevel
 		{
 			return false;
 		}
+		LogMessage(observed is Being b0 && (message.StartsWith(" ") || message.StartsWith("'")) ? b0.Name + message : message);
 		if (!Tile.IsTileDescription(message))
 		{
 			MessageSerial++; // RVIP: auto-explore stops on new messages (not tile descriptions)
@@ -1496,8 +1497,11 @@ public class DungeonLevel
 		int num3 = 0;
 		bool flag = false;
 		char c;
+		bool nav = false, stop = false; // RVIP 3c: cursor moves / item menu handled here
+		int[] itemPage = new int[0], itemLine = new int[0];
 		do
 		{
+			nav = false;
 			List<string> list2 = getInfos();
 			int num4 = Curses.Instance.WindowHeight - 2 - ((headline != null) ? 1 : 0) - list2.Count - (printChoice ? 1 : 0);
 			bool flag2 = false;
@@ -1516,6 +1520,9 @@ public class DungeonLevel
 			List<List<string>> list5 = new List<List<string>>();
 			List<string> list6 = new List<string>();
 			int num5 = 0;
+			itemPage = new int[list.Count];
+			itemLine = new int[list.Count];
+			int itemIndex = 0;
 			foreach (Item item3 in list)
 			{
 				string itemInfo = GetItemInfo(list, item3);
@@ -1528,6 +1535,8 @@ public class DungeonLevel
 					list6 = new List<string>();
 					list4 = new List<bool>();
 				}
+				itemPage[itemIndex] = list5.Count;
+				itemLine[itemIndex++] = list6.Count;
 				bool item = highlightEquippedItems && item3.IsEquipped;
 				for (int i = 0; i < splitLines.Length; i++)
 				{
@@ -1546,6 +1555,11 @@ public class DungeonLevel
 				num4++;
 			}
 			num3 = list5.Count;
+			if (list.Count > 0)
+			{
+				_itemCursor = Math.Max(0, Math.Min(_itemCursor, list.Count - 1));
+				num2 = itemPage[_itemCursor];
+			}
 			if (num2 >= num3)
 			{
 				num2 = num3 - 1;
@@ -1613,6 +1627,11 @@ public class DungeonLevel
 					Curses.Instance.InvertColors();
 				}
 			}
+			if (list.Count > 0 && itemPage[_itemCursor] == num2)
+			{
+				Curses.Instance.SetCursorPosition(Curses.Instance.WindowWidth - num6 + 2, ((headline != null) ? 1 : 0) + itemLine[_itemCursor]);
+				Curses.Instance.Write('>'); // RVIP 3c: item cursor
+			}
 			for (int l = 0; l < list2.Count; l++)
 			{
 				Curses.Instance.SetCursorPosition(Curses.Instance.WindowWidth - num6 - 2, list8.Count + l + ((headline != null) ? 1 : 0));
@@ -1652,9 +1671,15 @@ public class DungeonLevel
 			if (c == ' ' && num3 > 1)
 			{
 				num2 = (num2 + 1) % num3;
+				_itemCursor = Array.IndexOf(itemPage, num2);
+			}
+			else if (list.Count > 0)
+			{
+				_lastItemKey = consoleKeyInfo;
+				(nav, stop, c, flag) = ItemCursorKey(list, consoleKeyInfo, c, flag, num3 > 1);
 			}
 		}
-		while ((c == ' ' && num3 > 1) || processKey(list, c, flag));
+		while (!stop && (nav || (c == ' ' && num3 > 1) || processKey(list, c, flag)));
 		Render();
 	}
 
@@ -1811,7 +1836,15 @@ public class DungeonLevel
 			return;
 		}
 		ItemSelectionList list = new ItemSelectionList(Grog.Inventory.GetInventory(), useAssociatedItemCharacters: true);
-		ProcessItemSelectionList(() => GetInventoryInfos(list, Grog.Gold), list, ProcessInventoryKey, printChoice: true, () => "--- Manage Inventory (" + Grog.Inventory.ItemsCarried + "/" + Grog.Inventory.MaxItemCount + ") ---", highlightEquippedItems: true);
+		_inInventory = true;
+		try
+		{
+		ProcessItemSelectionList(() => GetInventoryInfos(list, Grog.Gold), list, ProcessInventoryMain, printChoice: true, () => "--- Manage Inventory (" + Grog.Inventory.ItemsCarried + "/" + Grog.Inventory.MaxItemCount + ") ---", highlightEquippedItems: true);
+		}
+		finally
+		{
+			_inInventory = false;
+		}
 	}
 
 	private bool ProcessEndKey(ItemSelectionList list, char key, bool isCtrlModified)

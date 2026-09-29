@@ -483,7 +483,12 @@ internal static class Grog
 							{
 								currentDungeonLevel.MovePlayerSouth();
 							}
-							else if (consoleKeyInfo.Key == ConsoleKey.Enter || consoleKeyInfo.Key == ConsoleKey.R)
+							else if (consoleKeyInfo.Key == ConsoleKey.Enter)
+							{
+								CommandMenu.Show(); // RVIP: Enter = command menu (interact is r)
+								currentDungeonLevel.Render();
+							}
+							else if (consoleKeyInfo.Key == ConsoleKey.R)
 							{
 								currentDungeonLevel.InteractWithEnvironment();
 							}
