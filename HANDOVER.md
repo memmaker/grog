@@ -222,6 +222,12 @@ mode shows the whole screen without hero centring when it fits.
 - Autosave after stairs fixed: the guard is `Moves` changed **or** the level changed (stairs cost no move).
   Test: headless `KEYS=<Esc>g×40>×12 NOMON=1 DUMP=1 GrogNative 4 0`, then run again (loads grog42) → same D:.
 
+- Killer missing on starvation deaths: `Player.IsAlive` is false once `Satiation <= 0`, but the "dies of starvation"
+  branch (which records the cause) only runs on a hunger-level change. Beacon falls back to `Game.DeathCause`, then
+  "starvation" (`src/Grog/Grog.cs`). 30 seed pairs: 31/31 deaths carry a killer.
+- Saving during a run/rest crashed (`Being.AutomaticAction` holds non-`[Serializable]` classes) and left a truncated
+  save that then failed to load. Now `[field: NonSerialized]`; old saves still load.
+
 ### RVIP finetuning (done; merged into main 6901f10, deployed)
 
 Items of `rvip-tools/RVIP-Finetuning.md` for a text-only C# game:

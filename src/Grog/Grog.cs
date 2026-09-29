@@ -649,7 +649,7 @@ internal static class Grog
 			}
 			{ //RVIP 12: graveyard/leaderboard report (death, win = left the dungeon immortal, quit/fled)
 				string ev = !player3.IsAlive ? "death" : (player3.HasLeftDungeon && player3.HasGainedImmortality) ? "win" : "quit";
-				string killer = ev == "death" ? Player.RvipKiller : null;
+				string killer = ev == "death" ? (Player.RvipKiller ?? Game.Instance.DeathCause ?? (player3.SatiationLevel == global::Grog.Dressings.Items.Implementations.Food.SatiationLevel.Starved ? "starvation" : null)) : null; // IsAlive is false at Satiation <= 0 even when the "dies of starvation" branch never ran
 				if (killer != null) { if (killer.StartsWith("by ")) killer = killer.Substring(3); foreach (string a in new[] { "a ", "an ", "the " }) if (killer.StartsWith(a)) { killer = killer.Substring(a.Length); break; } }
 				long score = 0; try { score = Game.Instance.HighscoreManager.GetScoreFor(player3) - player3.InitialScore; } catch { }
 				Term.Beacon(ev, string.IsNullOrEmpty(player3.ChristenedName) ? null : player3.ChristenedName, killer, Game.Instance.DungeonMaster.CurrentDungeonLevel.Level, score, player3.Moves, player3.Level);

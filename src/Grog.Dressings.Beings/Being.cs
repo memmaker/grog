@@ -205,7 +205,7 @@ public class Being : Thing
 
 	public int MaxHitPoints { get; set; }
 
-	public IAutomaticAction AutomaticAction { get; set; }
+	[field: NonSerialized] public IAutomaticAction AutomaticAction { get; set; } //RVIP: an in-progress run/rest is not saved (its classes are not [Serializable]; saving during one wrote a truncated save)
 
 	public int Gold { get; set; }
 
