@@ -93,6 +93,10 @@
 	<button id="btn-file" title="Save files and new game">File ▾</button>
 	<span class="sep"></span>
 	<button id="btn-layout" title="Windows: layout, show and hide">Windows ▾</button>
+	<button id="btn-audio" title="Sound effects">Audio ▾</button>
+	<div id="menu-audio">
+		<label title="Sound effects on or off (off by default)"><input type="checkbox" id="chk-sound"> Sound effects</label>
+	</div>
 	<div id="menu-file">
 		<button id="btn-export" title="Download all game files">Export save</button>
 		<button id="btn-import" title="Load game files from disk">Import save</button>
@@ -121,6 +125,7 @@
 <div id="overlay" hidden><div class="card"><h2>Grog has ended</h2><p>Your files are stored in this browser.</p><button id="btn-restart">Play again</button></div></div>
 <script src="../rvip-wm.js"></script>
 <script src="../rvip-app.js"></script>
+<script src="../rvip-sound.js"></script>
 <script type="module" src="grog.js"></script>
 </body>
 </html>

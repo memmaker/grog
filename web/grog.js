@@ -160,7 +160,7 @@ function update(i) {
 }
 function saveLayout() { clearTimeout(saveT); saveT = setTimeout(() => putFile('web-layout.json', new TextEncoder().encode(JSON.stringify(L))), 300); }
 async function makeWM() {
-	try { const d = await getFile('web-layout.json'); if (d) { const s = JSON.parse(new TextDecoder().decode(d)); L = { px: s.px >= 8 && s.px <= 48 ? s.px : 16, wm: s.wm }; } } catch (_) { }
+	try { const d = await getFile('web-layout.json'); if (d) { const s = JSON.parse(new TextDecoder().decode(d)); L = { px: s.px >= 8 && s.px <= 48 ? s.px : 16, wm: s.wm, sound: !!s.sound }; } } catch (_) { }
 	wm = RvipWM({
 		area: $('game'), menu: $('btn-layout'),
 		wins: [{ id: 'map', title: 'Map' }, { id: 'msg', title: 'Messages' }, { id: 'stat', title: 'Status' },
@@ -185,6 +185,7 @@ function onMessage(e) {
 		if (m.info) { try { info = JSON.parse(m.info); update(info); } catch (err) { console.error('info', err); } }
 		if (!app.running && !ended) { app.running = true; app.status(''); $('game').hidden = false; wm.apply(); }
 		break;
+	case 'sound': if (L.sound) RVIPSound.play([m.name], 0.6); break;
 	case 'store': putFile(m.name, m.data); break;
 	case 'delete': delFile(m.name); break;
 	case 'quit': case 'exit': if (!ended) { ended = true; app.running = false; setTimeout(() => { $('overlay').hidden = false; }, 300); } break;
@@ -203,12 +204,15 @@ async function main() {
 	ctx = document.createElement('canvas').getContext('2d');
 	$('btn-restart').onclick = () => location.reload();
 	RvipWM.dropdown($('btn-file'), $('menu-file'));
+	RvipWM.dropdown($('btn-audio'), $('menu-audio'));
+	$('chk-sound').onchange = function () { L.sound = this.checked; saveLayout(); this.blur(); };
 	document.querySelectorAll('#bar button').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
 	$('full').addEventListener('click', e => clickRow(e, $('full').firstElementChild, 0));
 	$('map').addEventListener('click', e => { const c = $('map').querySelector('canvas'); clickRow(e, c, c._r0 || 0); });
 	if (!await isolate()) { app.status('This browser cannot run the game here (no cross-origin isolation / SharedArrayBuffer).', true); return; }
 	db = await openDB();
 	await makeWM();
+	$('chk-sound').checked = !!L.sound;
 	const files = await allFiles();
 	ring = new Int32Array(new SharedArrayBuffer(4 * (2 + NSLOT * SLOT)));
 	worker = new Worker('worker.js', { type: 'module' });

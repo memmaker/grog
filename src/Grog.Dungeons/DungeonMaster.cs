@@ -226,6 +226,7 @@ public class DungeonMaster
 
 	public void DescendLevel()
 	{
+		global::Grog.Kernel.GCurses.Term.Sound("stairs"); //RVIP 6b
 		try
 		{
 			Game.Save(42);
@@ -239,6 +240,7 @@ public class DungeonMaster
 
 	public void AscendLevel()
 	{
+		global::Grog.Kernel.GCurses.Term.Sound("stairs"); //RVIP 6b
 		try
 		{
 			Game.Save(42);

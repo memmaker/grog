@@ -67,6 +67,7 @@ namespace GrogWeb{
 		}
 		public void Sleep(int ms){ JsSleep(ms); }
 		public void Beep(){ JsSound("beep"); }
+		internal static void JsSoundStatic(string n){ if(n != null) JsSound(n); }
 		public void Present(int[] cells,int cols,int rows,int cx,int cy,bool visible){ JsPresent(cells,cols,rows,cx,cy,visible,Term.Info != null ? Term.Info() : ""); }
 	}
 	public static class WebMain{
@@ -75,6 +76,7 @@ namespace GrogWeb{
 			Term.Backend = b;
 			Term.DataRoot = WebBackend.Dir;
 			Term.Info = global::Grog.Dungeons.DungeonLevel.RvipInfo;
+			Term.SoundOut = WebBackend.JsSoundStatic;
 			try{ global::Grog.Grog.Main(new string[0]); }
 			catch(Exception e){ Console.WriteLine("Grog crashed: " + e); throw; }
 			b.SyncFiles();

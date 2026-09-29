@@ -1787,6 +1787,7 @@ public partial class DungeonLevel
 			list.Remove(itemAssociatedWith);
 			RemoveItem(Grog.X, Grog.Y, itemAssociatedWith);
 			Grog.Inventory.Add(itemAssociatedWith);
+			global::Grog.Kernel.GCurses.Term.Sound("pickup"); //RVIP 6b
 			Message(" picks up " + itemAssociatedWith.Description + " (" + itemAssociatedWith.AssociatedCharacter + ").");
 			bool flag = Grog.Inventory.CanTake(1);
 			if (!flag)

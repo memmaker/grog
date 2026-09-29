@@ -1013,6 +1013,7 @@ public class Being : Thing
 
 	public virtual void SufferDamage(DungeonLevel dungeonLevel, Being attacker, int total, string deathCause = null)
 	{
+		if (total > 0) global::Grog.Kernel.GCurses.Term.Sound(this is Player ? "hurt" : attacker is Player ? "hit" : null); //RVIP 6b
 		if (IsAffectedBySpecialRoomPower(SpecialRoomPower.DoubleDamage, SpecialRoomPower.DoubleDamageByMonsters, SpecialRoomPower.TripleDamage, SpecialRoomPower.TripleDamageByMonsters) && attacker != null)
 		{
 			bool flag = !(attacker is Player);

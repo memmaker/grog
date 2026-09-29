@@ -138,3 +138,23 @@ list reopens (it is in `MessageLog`). Next: stage 4 (tiles).
 (step 6); the status HP bar (inverse part) is not shown in the Status window; single-window
 mode shows the whole screen without hero centring when it fits.
 
+
+### Stage 6 — Docs + sound (done)
+
+- **Docs:** `~/Desktop/Games/Roguelikes/Docs` (not a git repo): `parse_grog` + `GAMES` entry
+  `grog.html` in `build-docs.py` (keys parsed from `Constants.cs` HelpText + 8 extra rows; the
+  builder asserts > 30 rows), guide + `SAVING['grog.html']` in `guides.py`. `web/make-help.py`
+  adds Saving, guide, Tips and Credits from the Docs when present (game text only otherwise).
+  Credits: Thomas Biskup, free download, all rights reserved (title screen), binary only.
+- **Sound:** `Term.Sound(name)` → `Term.SoundOut` (set in `WebBackend`) → worker `sound` →
+  page plays `sound/<name>.wav` when Audio ▾ → Sound effects is on (off by default, kept in
+  `web-layout.json`). Names: hit, hurt (`Being.SufferDamage`), death (`Grog.cs` "You died"),
+  pickup (`DungeonLevel` pick up, `GoldFeature`), stairs (`DungeonMaster.Descend/AscendLevel`),
+  levelup (`Player.GainExperience`), beep (`Console.Beep`). WAVs synthesized by
+  `web/make-sounds.py` (run by `build.sh`). No music.
+- **Autosave:** `Grog.cs` before the command `ReadKey`: with a backend, no automatic action,
+  no key pending and `Moves` changed → `Game.Save(42)` (the game's own crash slot). The main
+  loop's end already deletes slot 42 (death, quit, save). At start the slot-42 prompt reads
+  "found your autosaved game" in the browser. Tested: reload continues, Ctrl+q deletes it.
+
+**Next:** stage 7 (publish).

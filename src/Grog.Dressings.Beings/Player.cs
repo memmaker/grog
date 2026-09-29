@@ -458,7 +458,7 @@ public class Player : Being
 		int num = Math.Max(dungeonLevel.Level / 3, Game.Instance.Random(8) + 2 + ((Constitution < 10) ? (Constitution - 10 >> 1) : (Constitution - 10)));
 		HitPoints += num;
 		MaxHitPoints += num;
-		dungeonLevel.Message(" gains a level (+" + num + " H)!");
+		dungeonLevel.Message(" gains a level (+" + num + " H)!"); global::Grog.Kernel.GCurses.Term.Sound("levelup"); //RVIP 6b
 		Level++;
 		if (Level % 3 == 0)
 		{

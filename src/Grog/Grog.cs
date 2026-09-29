@@ -160,6 +160,8 @@ internal static class Grog
 		e.Cancel = true;
 	}
 
+	static int _rvipSavedMoves = -1;
+
 	private static bool Play()
 	{
 		Game.Instance.Options.InitializeGameBasedOnOptions();
@@ -169,9 +171,16 @@ internal static class Grog
 			Curses.Instance.InvertColors();
 			Curses.Instance.WriteLine("*** ATTENTION! ***");
 			Curses.Instance.InvertColors();
+			if (Term.Backend != null) // RVIP: in the browser the autosave is the normal way back into a running game
+			{
+				Curses.Instance.WriteLine("Grog has found your autosaved game and will continue it now.");
+			}
+			else
+			{
 			Curses.Instance.WriteLine("Grog has found an auto-save file of a previous game. It seems that your last");
 			Curses.Instance.WriteLine("game crashed for some reason. Grog now will reload the auto-save. Either");
 			Curses.Instance.WriteLine("continue the game, save it or quit it. Then you can proceed normally.");
+			}
 			Curses.Instance.InvertColors();
 			Curses.Instance.WriteLine("---more---");
 			Curses.Instance.InvertColors();
@@ -401,6 +410,8 @@ internal static class Grog
 							ConsoleKeyInfo consoleKeyInfo;
 							try
 							{
+								// RVIP: autosave (slot 42, the game's own crash save) at the prompt with no keys pending; the loop end deletes it
+								if (Term.Backend != null && player3.AutomaticAction == null && player3.Moves != _rvipSavedMoves && !Term.KeyAvailable) { _rvipSavedMoves = player3.Moves; Game.Save(42); }
 								AutoExploreAction.Note(currentDungeonLevel, player3);
 								Term.AtCmd = true;
 								try { consoleKeyInfo = Curses.Instance.ReadKey(); } finally { Term.AtCmd = false; }
@@ -615,7 +626,7 @@ internal static class Grog
 				}
 				else
 				{
-					Curses.Instance.WriteLine("\nYou died...\n");
+					Curses.Instance.WriteLine("\nYou died...\n"); Term.Sound("death"); //RVIP 6b
 				}
 				Game.Instance.HighscoreManager.IncreaseFailedPlayerCount();
 			}

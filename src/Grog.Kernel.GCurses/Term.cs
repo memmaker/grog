@@ -52,6 +52,9 @@ public static class Term
 
 	// RVIP stage 5: window info for the page (JSON, built by the game), and the flags it reads
 	public static Func<string> Info;
+	// RVIP 6b: named sound effects for the page (hit hurt death pickup stairs levelup beep)
+	public static Action<string> SoundOut;
+	public static void Sound(string name) { SoundOut?.Invoke(name); }
 	public static bool MainView, AtCmd, Clickable;
 	public static string PromptRow = "";
 

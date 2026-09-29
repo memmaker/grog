@@ -21,6 +21,7 @@ public class GoldFeature : Feature
 			if (being is Player player)
 			{
 				int gold = GetGold(dungeonLevel);
+				global::Grog.Kernel.GCurses.Term.Sound("pickup"); //RVIP 6b
 				dungeonLevel.Message(" picks up " + gold + " gold pieces!");
 				player.Gold += gold;
 				dungeonLevel.SetFeatureAt(player.X, player.Y, null);
