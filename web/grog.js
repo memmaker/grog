@@ -24,7 +24,7 @@ const app = RvipApp({
 	put: (f, data) => putFile(f.name || f, data).then(() => {}), // a string result = refuse (rvip-app)
 	noSave: 'No game files yet. Save first (Q).'
 });
-let scr = null, COLS = 80, ROWS = 26, cur = { x: 0, y: 0, vis: false }, dirty = true, ctx, info = {}, rects = {}, cellH = 16;
+let scr = null, base = null, COLS = 80, ROWS = 26, cur = { x: 0, y: 0, vis: false }, dirty = true, ctx, info = {}, rects = {}, cellH = 16;
 /* ---------- cross-origin isolation (SharedArrayBuffer) ---------- */
 async function isolate() {
 	if (window.crossOriginIsolated) return true;
@@ -125,15 +125,23 @@ function draw() {
 function fullText(pre) {
 	const p = RvipWM.fontSize('msg');
 	pre.style.fontSize = p + 'px'; pre.style.lineHeight = Math.ceil(p * 1.2) + 'px';
-	let html = '', rows = ROWS;
-	while (rows > 1 && [...Array(COLS)].every((_, k) => scr[((rows - 1) * COLS + k) * 3] <= 32)) rows--;
-	for (let r = 0; r < rows; r++) {
-		let k = 0;
-		while (k < COLS) {
+	// only the box of cells the menu changed on the last map screen: map/status/inventory already have windows
+	let t = ROWS, b = -1, l = COLS, rt = -1;
+	for (let r = 0; r < ROWS; r++) for (let k = 0; k < COLS; k++) {
+		const i = (r * COLS + k) * 3;
+		if (base && base.length === scr.length ? scr[i] !== base[i] || scr[i + 1] !== base[i + 1] || scr[i + 2] !== base[i + 2] : scr[i] > 32)
+			{ t = Math.min(t, r); b = r; l = Math.min(l, k); rt = Math.max(rt, k); }
+	}
+	if (b < 0) { t = b = l = rt = 0; }
+	pre._r0 = t;
+	let html = '';
+	for (let r = t; r <= b; r++) {
+		let k = l;
+		while (k <= rt) {
 			const i = (r * COLS + k) * 3, fg = scr[i + 1], bg = scr[i + 2];
-			let t = '';
-			while (k < COLS) { const j = (r * COLS + k) * 3; if (scr[j + 1] !== fg || scr[j + 2] !== bg) break; const ch = scr[j]; t += ch < 32 ? ' ' : String.fromCharCode(ch); k++; }
-			html += '<span style="color:' + hex(fg) + ';background:' + hex(bg) + '">' + t.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>';
+			let s = '';
+			while (k <= rt) { const j = (r * COLS + k) * 3; if (scr[j + 1] !== fg || scr[j + 2] !== bg) break; const ch = scr[j]; s += ch < 32 ? ' ' : String.fromCharCode(ch); k++; }
+			html += '<span style="color:' + hex(fg) + ';background:' + hex(bg) + '">' + s.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>';
 		}
 		html += '\n';
 	}
@@ -208,7 +216,7 @@ function onMessage(e) {
 	const m = e.data;
 	switch (m.t) {
 	case 'screen':
-		scr = m.cells; COLS = m.cols; ROWS = m.rows; cur = { x: m.cx, y: m.cy, vis: m.vis }; dirty = true;
+		scr = m.cells; if (m.info && JSON.parse(m.info).main) base = scr.slice(); COLS = m.cols; ROWS = m.rows; cur = { x: m.cx, y: m.cy, vis: m.vis }; dirty = true;
 		if (m.info) { try { info = JSON.parse(m.info); update(info); } catch (err) { console.error('info', err); } }
 		if (!app.running && !ended) { app.running = true; app.status(''); $('game').hidden = false; wm.apply(); }
 		break;
@@ -247,7 +255,7 @@ async function main() {
 	});
 	$('chk-sound').onchange = function () { L.sound = this.checked; saveLayout(); this.blur(); };
 	document.querySelectorAll('#bar button').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
-	$('full').addEventListener('click', e => clickRow(e, $('full').firstElementChild, 0));
+	$('full').addEventListener('click', e => clickRow(e, $('full').firstElementChild, $('full').firstElementChild._r0 || 0));
 	$('map').addEventListener('click', e => { const c = $('map').querySelector('canvas'); clickRow(e, c, c._r0 || 0); });
 	if (!await isolate()) { app.status('This browser cannot run the game here (no cross-origin isolation / SharedArrayBuffer).', true); return; }
 	db = await openDB();
