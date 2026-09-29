@@ -230,7 +230,7 @@ mode shows the whole screen without hero centring when it fits.
 
 ### RVIP finetuning (done; merged into main 6901f10, deployed)
 
-Items of `rvip-tools/RVIP-Finetuning.md` for a text-only C# game:
+Items of the former `rvip-tools/RVIP-Finetuning.md` (now in the `RVIP.md` stage checklists) for a text-only C# game:
 - `<` / `>` only walk to the stairs; the key again takes them (`AutoExploreAction.Execute`; help, Enter menu, make-help texts).
 - Enter menu: Movement group dropped (`CommandMenu.cs`).
 - Explore / stairs walk visible: `Curses.Refresh()` + `Term.Sleep(40)` per step (the loop's `Render` alone presents nothing until the next key wait).
