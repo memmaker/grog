@@ -156,7 +156,7 @@ function update(i) {
 			i.inv.forEach(([t, eq]) => { const d = document.createElement('div'); d.textContent = t; if (eq) d.className = 'inv-eq'; el.appendChild(d); });
 		}
 	}
-	if (i.vis) RvipWM.visible($('vis'), i.vis.map(v => 'M' + v).join('\n'));
+	if (i.vis) RvipWM.visible($('vis'), i.vis.join('\n'));
 }
 function saveLayout() { clearTimeout(saveT); saveT = setTimeout(() => putFile('web-layout.json', new TextEncoder().encode(JSON.stringify(L))), 300); }
 async function makeWM() {

@@ -38,6 +38,17 @@ public partial class DungeonLevel
 		return b.Append('"').ToString();
 	}
 	static string Arr(IEnumerable<string> xs) => "[" + string.Join(",", xs) + "]";
+	static string ItemColour(global::Grog.Dressings.Items.Types.ItemType t) => t switch
+	{
+		global::Grog.Dressings.Items.Types.ItemType.Armor or global::Grog.Dressings.Items.Types.ItemType.Shield => "#b87333",
+		global::Grog.Dressings.Items.Types.ItemType.MeleeWeapon => "#c0c0c0",
+		global::Grog.Dressings.Items.Types.ItemType.Ring => "#e02020",
+		global::Grog.Dressings.Items.Types.ItemType.Food => "#d2a060",
+		global::Grog.Dressings.Items.Types.ItemType.Wand => "#20c040",
+		global::Grog.Dressings.Items.Types.ItemType.Potion => "#4080ff",
+		global::Grog.Dressings.Items.Types.ItemType.Scroll => "#e8e8e8",
+		_ => "#a0a0a0"
+	};
 	public static string RvipInfo()
 	{
 		var lvl = global::Grog.Kernel.Game.Instance?.DungeonMaster?.CurrentDungeonLevel;
@@ -58,7 +69,16 @@ public partial class DungeonLevel
 			o.Add("\"inv\":" + Arr(il));
 			var vl = new List<string>();
 			foreach (var b in lvl.GetAllBeingsVisibleTo(g))
-				if (b != g) vl.Add(J(b.Character(lvl, b.X, b.Y) + " " + (string.IsNullOrEmpty(b.ChristenedName) ? "" : b.ChristenedName + " the ") + b.Type));
+				if (b != g) vl.Add(J("M" + b.Character(lvl, b.X, b.Y) + (string.IsNullOrEmpty(b.ChristenedName) ? "" : b.ChristenedName + " the ") + b.Type));
+			// items in view (Angband colours by kind; Grog is monochrome); gold amount is rolled at pickup, so none shown
+			for (int x = 0; x < lvl.Width; x++)
+				for (int y = 0; y < lvl.Height; y++)
+				{
+					if (!g.CanSee(lvl, x, y)) continue;
+					if (lvl.GetFeatureAt(x, y) is global::Grog.Dressings.Features.GoldFeature) vl.Add(J("I$gold\t#ffd700"));
+					var its = lvl.GetItemsAt(x, y);
+					if (its != null) foreach (Item it in its) vl.Add(J("I" + it.Character + it.Description.TrimEnd() + "\t" + ItemColour(it.ItemType)));
+				}
 			o.Add("\"vis\":" + Arr(vl));
 		}
 		if (_sentLog != LogSerial)
