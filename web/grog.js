@@ -12,7 +12,7 @@ const SLOT = 48, NSLOT = 64;
 const $ = id => document.getElementById(id);
 const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
 
-let worker, ring, db, ended = false, wm = null, L = { px: 16, wm: null }, saveT = 0;
+let worker, ring, db, ended = false, wm = null, L = { wm: null }, saveT = 0;
 const isGame = k => !k.startsWith('web-');
 async function gameFiles() { return Object.keys(await allFiles()).filter(isGame); }
 /* Export / Import / New game (rvip-app.js): every game file in one bundle */
@@ -24,7 +24,7 @@ const app = RvipApp({
 	put: (f, data) => putFile(f.name || f, data).then(() => {}), // a string result = refuse (rvip-app)
 	noSave: 'No game files yet. Save first (Q).'
 });
-let scr = null, base = null, COLS = 80, ROWS = 26, cur = { x: 0, y: 0, vis: false }, dirty = true, ctx, info = {}, rects = {}, cellH = 16;
+let scr = null, COLS = 80, ROWS = 26, cur = { x: 0, y: 0, vis: false }, dirty = true, ctx, info = {}, rects = {}, cellH = 16;
 /* ---------- cross-origin isolation (SharedArrayBuffer) ---------- */
 async function isolate() {
 	if (window.crossOriginIsolated) return true;
@@ -89,21 +89,20 @@ function onKey(e) {
  * The game (Term.Info, DungeonLevel.RvipInfo) sends: main (the map screen is up), hero [x,row],
  * map [first row, rows], status lines, inv [[text, equipped]], vis [names], log, prompt, fg/bg.
  * Multi-window: map rows on the canvas, the rest in text windows; a whole-screen view
- * (lists, menus, help) as HTML text over the windows. One window: the whole screen on the canvas.
- * Cell size only from the Map window's A-/A+ (L.px), never from the window size. */
+ * (lists, menus, help) on the map canvas, as in one window.
+ * Fixed-size levels: the cell size fits the rows shown into the Map window (no scroll, no A-/A+). */
 const hex = v => '#' + (v & 0xffffff).toString(16).padStart(6, '0');
 const one = () => wm && wm.mode() === 'single';
 function draw() {
 	requestAnimationFrame(draw);
 	if (!dirty || !scr || !wm) return;
 	dirty = false;
-	const p = L.px, face = faceOf(L.mapFace), c = $('map').querySelector('canvas'), full = $('full');
+	const face = faceOf(L.mapFace), c = $('map').querySelector('canvas');
 	const whole = one() || !info.main || !info.map;
-	full.hidden = one() || !!info.main;
-	full.classList.toggle('click', !!info.click);
-	if (!full.hidden) fullText(full.firstElementChild);
-	if (!info.main && !one()) return; // multi: menu is the #full overlay; keep the last map frame
 	const r0 = whole ? 0 : info.map[0], R = whole ? ROWS : info.map[1];
+	ctx.font = '100px ' + face;
+	const mw = ctx.measureText('M').width / 100, vb = c.parentNode;
+	const p = Math.max(4, Math.floor(Math.min(vb.clientWidth / COLS / mw, vb.clientHeight / R / 1.2)) - 1);
 	ctx.font = p + 'px ' + face;
 	const w = Math.ceil(ctx.measureText('M').width), h = cellH = Math.ceil(p * 1.2);
 	if (c.width !== Math.round(COLS * w * dpr) || c.height !== Math.round(R * h * dpr)) { c.width = Math.round(COLS * w * dpr); c.height = Math.round(R * h * dpr); }
@@ -121,43 +120,17 @@ function draw() {
 	else RvipWM.center(c, 0, 0, COLS * w, R * h);
 	c._r0 = r0;
 }
-/* the whole screen as HTML text (runs of one colour pair); its text size follows Messages (A-/A+ there) */
-function fullText(pre) {
-	const p = RvipWM.fontSize('msg');
-	pre.style.fontSize = p + 'px'; pre.style.lineHeight = Math.ceil(p * 1.2) + 'px';
-	// only the box of cells the menu changed on the last map screen: map/status/inventory already have windows
-	let t = ROWS, b = -1, l = COLS, rt = -1;
-	for (let r = 0; r < ROWS; r++) for (let k = 0; k < COLS; k++) {
-		const i = (r * COLS + k) * 3;
-		if (base && base.length === scr.length ? scr[i] !== base[i] || scr[i + 1] !== base[i + 1] || scr[i + 2] !== base[i + 2] : scr[i] > 32)
-			{ t = Math.min(t, r); b = r; l = Math.min(l, k); rt = Math.max(rt, k); }
-	}
-	if (b < 0) { t = b = l = rt = 0; }
-	pre._r0 = t;
-	let html = '';
-	for (let r = t; r <= b; r++) {
-		let k = l;
-		while (k <= rt) {
-			const i = (r * COLS + k) * 3, fg = scr[i + 1], bg = scr[i + 2];
-			let s = '';
-			while (k <= rt) { const j = (r * COLS + k) * 3; if (scr[j + 1] !== fg || scr[j + 2] !== bg) break; const ch = scr[j]; s += ch < 32 ? ' ' : String.fromCharCode(ch); k++; }
-			html += '<span style="color:' + hex(fg) + ';background:' + hex(bg) + '">' + s.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>';
-		}
-		html += '\n';
-	}
-	pre.innerHTML = html;
-}
 /* mouse: a click on a row of a menu or item list sends that row; the game picks the entry */
 function clickRow(e, el, r0) {
 	if (!info.click || !app.running) return;
-	const b = el.getBoundingClientRect(), h = el.tagName === 'PRE' ? parseFloat(el.style.lineHeight) : cellH;
+	const b = el.getBoundingClientRect(), h = cellH;
 	const row = Math.floor((e.clientY - b.top) / h) + r0;
 	if (row >= 0 && row < ROWS) sendKey('RvipRow', String(row), '');
 }
 function update(i) {
 	RvipWM.prompt.text(i.main && !one() ? i.prompt || '' : '');
 	RvipWM.prompt.wait(i.atCmd);
-	if (i.fg !== undefined) ['msgb', 'stat', 'inv', 'vis', 'full'].forEach(id => { $(id).style.color = hex(i.fg); $(id).style.background = hex(i.bg); });
+	if (i.fg !== undefined) ['msgb', 'stat', 'inv', 'vis'].forEach(id => { $(id).style.color = hex(i.fg); $(id).style.background = hex(i.bg); });
 	if (i.log) RvipWM.setLog($('log'), i.log);
 	if (i.status) { const t = i.status.join('\n'); if ($('stat').textContent !== t) $('stat').textContent = t; }
 	if (i.inv) {
@@ -172,7 +145,7 @@ function update(i) {
 }
 function saveLayout() { clearTimeout(saveT); saveT = setTimeout(() => putFile('web-layout.json', new TextEncoder().encode(JSON.stringify(L))), 300); }
 async function makeWM() {
-	try { const d = await getFile('web-layout.json'); if (d) { const s = JSON.parse(new TextDecoder().decode(d)); L = { px: s.px >= 8 && s.px <= 48 ? s.px : 16, wm: s.wm, sound: !!s.sound, face: s.face || '', mapFace: s.mapFace || '' }; } } catch (_) { }
+	try { const d = await getFile('web-layout.json'); if (d) { const s = JSON.parse(new TextDecoder().decode(d)); L = { wm: s.wm, sound: !!s.sound, face: s.face || '', mapFace: s.mapFace || '' }; } } catch (_) { }
 	loadFace(L.face); loadFace(L.mapFace);
 	wm = RvipWM({
 		area: $('game'), menu: $('btn-layout'),
@@ -182,9 +155,8 @@ async function makeWM() {
 		single: 'map', state: L.wm,
 		save: st => { L.wm = st; saveLayout(); },
 		layout: r => { rects = r; dirty = true; update(info); renderMapSel(); },
-		zoom: { map: (p, d) => { L.px = Math.max(8, Math.min(48, L.px + d)); saveLayout(); dirty = true; }, msg: () => { dirty = true; } },
-		size: { map: () => L.px },
-		onReset: () => { L.px = 16; L.wm = wm.state(); saveLayout(); dirty = true; }
+		noFont: 'map',
+		onReset: () => { L.wm = wm.state(); saveLayout(); dirty = true; }
 	});
 	wm.apply();
 	renderMapSel();
@@ -193,7 +165,7 @@ async function makeWM() {
    the map's own (L.mapFace, a select on its title bar) for the map canvas */
 const faceOf = n => n ? '"' + n + '", ' + FONT : FONT;
 function faces() {
-	['msgb', 'stat', 'inv', 'vis', 'fullpre'].forEach(id => { (id === 'fullpre' ? $('full').firstElementChild : $(id)).style.fontFamily = L.face ? faceOf(L.face) : ''; });
+	['msgb', 'stat', 'inv', 'vis'].forEach(id => { $(id).style.fontFamily = L.face ? faceOf(L.face) : ''; });
 	dirty = true;
 }
 function loadFace(n) {
@@ -216,7 +188,7 @@ function onMessage(e) {
 	const m = e.data;
 	switch (m.t) {
 	case 'screen':
-		scr = m.cells; if (m.info && JSON.parse(m.info).main) base = scr.slice(); COLS = m.cols; ROWS = m.rows; cur = { x: m.cx, y: m.cy, vis: m.vis }; dirty = true;
+		scr = m.cells; COLS = m.cols; ROWS = m.rows; cur = { x: m.cx, y: m.cy, vis: m.vis }; dirty = true;
 		if (m.info) { try { info = JSON.parse(m.info); update(info); } catch (err) { console.error('info', err); } }
 		if (!app.running && !ended) { app.running = true; app.status(''); $('game').hidden = false; wm.apply(); }
 		break;
@@ -255,7 +227,6 @@ async function main() {
 	});
 	$('chk-sound').onchange = function () { L.sound = this.checked; saveLayout(); this.blur(); };
 	document.querySelectorAll('#bar button').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
-	$('full').addEventListener('click', e => clickRow(e, $('full').firstElementChild, $('full').firstElementChild._r0 || 0));
 	$('map').addEventListener('click', e => { const c = $('map').querySelector('canvas'); clickRow(e, c, c._r0 || 0); });
 	if (!await isolate()) { app.status('This browser cannot run the game here (no cross-origin isolation / SharedArrayBuffer).', true); return; }
 	db = await openDB();
