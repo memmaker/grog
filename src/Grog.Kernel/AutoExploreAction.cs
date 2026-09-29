@@ -28,6 +28,7 @@ public class AutoExploreAction : IAutomaticAction
 	public static bool Start(Player grog, DungeonLevel level, Tile stairs)
 	{
 		Note(level, grog);
+		NewItemInSight(grog, level); // items already in view don't stop the walk
 		if (stairs != null && level.GetTileAt(grog.X, grog.Y) == stairs)
 		{
 			stairs.Interaction.Interact(level, grog);
@@ -58,7 +59,7 @@ public class AutoExploreAction : IAutomaticAction
 			_grog.ResetAutomaticAction(); // RVIP: only walk there; the key again takes the stairs
 			return false;
 		}
-		if ((DungeonLevel.MessageSerial != _serial && !Game.Instance.IsFirstTurnWithAutomaticAction) || VisibleMonster(_grog, _level))
+		if ((DungeonLevel.MessageSerial != _serial && !Game.Instance.IsFirstTurnWithAutomaticAction) || VisibleMonster(_grog, _level) || NewItemInSight(_grog, _level))
 		{
 			return false;
 		}
@@ -104,6 +105,24 @@ public class AutoExploreAction : IAutomaticAction
 			}
 		}
 		return false;
+	}
+
+	// Items (and gold) come into view that were not seen before; marks them seen. Per level, not saved.
+	private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<DungeonLevel, HashSet<object>> Seen = new();
+
+	private static bool NewItemInSight(Player grog, DungeonLevel l)
+	{
+		var seen = Seen.GetValue(l, k => new HashSet<object>());
+		bool found = false;
+		for (int x = 0; x < l.Width; x++)
+			for (int y = 0; y < l.Height; y++)
+			{
+				if (!grog.CanSee(l, x, y)) continue;
+				if (l.GetFeatureAt(x, y) is GoldFeature gold) found |= seen.Add(gold);
+				var its = l.GetItemsAt(x, y);
+				if (its != null) foreach (var it in its) found |= seen.Add(it);
+			}
+		return found;
 	}
 
 	// Known grid: remembered map character, in sight, or inside a lit room whose corner wall is
